@@ -1,3 +1,13 @@
+# Project specific
+jupyter_test.py
+*.ipynb
+token.pickle
+credentials.json
+cache/
+vscode/
+.ipynb_checkpoints/
+
+
 # Python
 __pycache__/
 *.py[cod]
@@ -61,3 +71,19 @@ htmlcov/
 
 # Documentation
 docs/_build/
+
+.directory
+npm-debug.log*
+.cursorrules
+.icommit_config.json
+*.pyd
+.DS_Store?
+node_modules/
+*.tmp
+.vim/
+*.pyo
+.cache/
+*.pyc
+.env
+logs/
+*.temp
