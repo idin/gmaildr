@@ -7,10 +7,65 @@ containing email data.
 
 import pandas as pd
 import re
-from typing import Optional
+from typing import Optional, List, Dict, Any, Union
 from tqdm.auto import tqdm
+from multiprocessing import Pool, cpu_count
+from functools import partial
 
 from .email_metrics import analyze_email_text
+
+
+def _analyze_single_email(
+    email_data: Dict[str, Any],
+    *,
+    text_column: str = 'text_content',
+    subject_column: str = 'subject'
+) -> Dict[str, Any]:
+    """
+    Analyze a single email and return its metrics.
+    
+    Args:
+        email_data (Dict[str, Any]): Dictionary containing email data.
+        text_column (str): Name of column containing email text content.
+        subject_column (str): Name of column containing email subjects.
+        
+    Returns:
+        Dict[str, Any]: Dictionary containing all metrics for the email.
+    """
+    from .email_metrics import EmailContentAnalyzer
+    
+    analyzer = EmailContentAnalyzer()
+    
+    # Extract email content
+    text_content = email_data.get(text_column, '') or ''
+    subject = email_data.get(subject_column, '') or ''
+    
+    # Check if text_content contains HTML (simple heuristic)
+    has_html = text_content and '<' in text_content and '>' in text_content
+    
+    if has_html:
+        # Extract HTML content from text (assuming it's HTML)
+        html_content = text_content
+        # Extract plain text by removing HTML tags
+        plain_text = re.sub(r'<[^>]+>', ' ', text_content)
+    else:
+        html_content = None
+        plain_text = text_content
+    
+    # Use the analyzer to get proper metrics
+    metrics = analyzer.analyze_email_content(
+        text_content=plain_text,
+        html_content=html_content,
+        subject=subject
+    )
+    
+    return {
+        'has_tracking_pixels': metrics.has_tracking_pixels,
+        'external_link_count': metrics.external_link_count,
+        'image_count': metrics.image_count,
+        'html_to_text_ratio': metrics.html_to_text_ratio,
+        'link_to_text_ratio': metrics.link_to_text_ratio
+    }
 
 
 def add_content_metrics_to_dataframe(
@@ -86,16 +141,176 @@ def add_content_metrics_to_dataframe(
     df_copy['caps_ratio'] = (df_copy['caps_word_count'] / total_words).fillna(0)
     df_copy['promotional_word_ratio'] = (promo_counts / total_words).fillna(0)
     
-    # HTML-based metrics (if HTML content available)
-    # For now, set defaults - can be enhanced if HTML column is available
-    df_copy['has_tracking_pixels'] = False
-    df_copy['external_link_count'] = 0
-    df_copy['image_count'] = 0
-    df_copy['html_to_text_ratio'] = 0.0
-    df_copy['link_to_text_ratio'] = 0.0
+    # HTML-based metrics - use EmailContentAnalyzer for proper parsing
+    # (analyzer already created above)
+    
+    # Process each email to get HTML-based metrics
+    html_metrics = []
+    for idx, row in df_copy.iterrows():
+        text_content = row.get('text_content', '')
+        subject = row.get('subject', '')
+        
+        # Handle NaN values - convert to empty string
+        if text_content is None or (hasattr(text_content, '__float__') and str(text_content) == 'nan'):
+            text_content = ''
+        if subject is None or (hasattr(subject, '__float__') and str(subject) == 'nan'):
+            subject = ''
+        
+        # Ensure we have strings
+        text_content = str(text_content) if text_content is not None else ''
+        subject = str(subject) if subject is not None else ''
+        
+        # Check if text_content contains HTML (simple heuristic)
+        has_html = '<' in text_content and '>' in text_content
+        
+        if has_html:
+            # Extract HTML content from text (assuming it's HTML)
+            html_content = text_content
+            # Extract plain text by removing HTML tags
+            plain_text = re.sub(r'<[^>]+>', ' ', text_content)
+        else:
+            html_content = None
+            plain_text = text_content
+        
+        # Use the analyzer to get proper metrics
+        metrics = analyzer.analyze_email_content(
+            text_content=plain_text,
+            html_content=html_content,
+            subject=subject
+        )
+        
+        html_metrics.append({
+            'has_tracking_pixels': metrics.has_tracking_pixels,
+            'external_link_count': metrics.external_link_count,
+            'image_count': metrics.image_count,
+            'html_to_text_ratio': metrics.html_to_text_ratio,
+            'link_to_text_ratio': metrics.link_to_text_ratio
+        })
+    
+    # Add HTML metrics to dataframe
+    for metric_name in ['has_tracking_pixels', 'external_link_count', 'image_count', 'html_to_text_ratio', 'link_to_text_ratio']:
+        df_copy[metric_name] = [metrics[metric_name] for metrics in html_metrics]
     
     if show_progress:
         print("  ✅ Content analysis complete!")
+    
+    return df_copy
+
+
+def add_content_metrics_to_dataframe_parallel(
+    df: pd.DataFrame, *,
+    text_column: str = 'text_content',
+    subject_column: str = 'subject',
+    show_progress: bool = True,
+    max_workers: Optional[int] = None,
+    chunk_size: int = 100
+) -> pd.DataFrame:
+    """
+    Add email content metrics to a DataFrame using parallel processing.
+    
+    Args:
+        df (pd.DataFrame): DataFrame with email data.
+        text_column (str): Name of column containing email text content.
+        subject_column (str): Name of column containing email subjects.
+        show_progress (bool): Whether to show progress bar.
+        max_workers (Optional[int]): Number of worker processes. Defaults to CPU count.
+        chunk_size (int): Number of emails to process per chunk.
+        
+    Returns:
+        pd.DataFrame: DataFrame with added metric columns.
+    """
+    if show_progress:
+        print("🔍 Analyzing email content with parallel processing...")
+    
+    df_copy = df.copy()
+    
+    # Use CPU count if max_workers not specified
+    if max_workers is None:
+        max_workers = max(1, cpu_count() - 1)  # Leave one CPU free
+    
+    # Convert DataFrame to list of dictionaries for parallel processing
+    emails_data = df_copy.to_dict('records')
+    
+    # Create partial function with fixed parameters
+    analyze_func = partial(
+        _analyze_single_email,
+        text_column=text_column,
+        subject_column=subject_column
+    )
+    
+    # Process emails in parallel
+    if show_progress:
+        print(f"  🚀 Using {max_workers} worker processes...")
+    
+    with Pool(processes=max_workers) as pool:
+        if show_progress:
+            # Use tqdm for progress tracking
+            html_metrics = list(tqdm(
+                pool.imap(analyze_func, emails_data, chunksize=chunk_size),
+                total=len(emails_data),
+                desc="Processing emails"
+            ))
+        else:
+            html_metrics = pool.map(analyze_func, emails_data)
+    
+    # Add vectorized operations for text-based metrics
+    if show_progress:
+        print("  📝 Extracting text patterns...")
+    
+    # Get text and subject columns, fill NaN with empty strings
+    text_series = df_copy[text_column].fillna('') if text_column in df_copy.columns else pd.Series([''] * len(df_copy))
+    subject_series = df_copy[subject_column].fillna('') if subject_column in df_copy.columns else pd.Series([''] * len(df_copy))
+    
+    # Combine text and subject for analysis
+    combined_text = subject_series + ' ' + text_series
+    
+    # Create analyzer for pattern matching
+    from .email_metrics import EmailContentAnalyzer
+    analyzer = EmailContentAnalyzer()
+    
+    # Flags using vectorized string operations
+    df_copy['has_unsubscribe_link'] = combined_text.str.contains(
+        '|'.join(analyzer.UNSUBSCRIBE_PATTERNS), case=False, regex=True, na=False
+    )
+    
+    df_copy['has_marketing_language'] = combined_text.str.contains(
+        '|'.join(analyzer.MARKETING_PATTERNS), case=False, regex=True, na=False
+    )
+    
+    df_copy['has_legal_disclaimer'] = combined_text.str.contains(
+        '|'.join(analyzer.LEGAL_PATTERNS), case=False, regex=True, na=False
+    )
+    
+    df_copy['has_bulk_email_indicators'] = combined_text.str.contains(
+        '|'.join(analyzer.BULK_EMAIL_INDICATORS), case=False, regex=True, na=False
+    )
+    
+    # Promotional content (at least 2 promotional words)
+    promotional_pattern = r'\b(' + '|'.join(analyzer.PROMOTIONAL_WORDS) + r')\b'
+    promo_counts = combined_text.str.count(promotional_pattern, flags=re.IGNORECASE)
+    df_copy['has_promotional_content'] = promo_counts >= 2
+    
+    if show_progress:
+        print("  🔢 Calculating counts and ratios...")
+    
+    # Counts using vectorized operations
+    df_copy['exclamation_count'] = combined_text.str.count('!')
+    # Fix caps detection - look for words that are ALL CAPS (at least 2 characters)
+    df_copy['caps_word_count'] = combined_text.str.count(r'\b[A-Z]{2,}\b')
+    
+    # Calculate ratios
+    total_words = combined_text.str.count(r'\b\w+\b')
+    total_words = total_words.replace(0, 1)  # Avoid division by zero
+    
+    df_copy['caps_ratio'] = (df_copy['caps_word_count'] / total_words).fillna(0)
+    df_copy['promotional_word_ratio'] = (promo_counts / total_words).fillna(0)
+    
+    # Add HTML metrics from parallel processing
+    for metric_name in ['has_tracking_pixels', 'external_link_count', 'image_count', 'html_to_text_ratio', 'link_to_text_ratio']:
+        df_copy[metric_name] = [metrics[metric_name] for metrics in html_metrics]
+    
+    if show_progress:
+        print("  ✅ Parallel content analysis complete!")
     
     return df_copy
 
@@ -147,12 +362,12 @@ def calculate_automated_email_score(df: pd.DataFrame) -> pd.DataFrame:
         score += (df_copy['promotional_word_ratio'] * weights['promotional_word_ratio'])
     
     # Normalize score to 0-1 range
-    df_copy['automated_email_score'] = score.clip(0, 1)
+    df_copy['automated_email_score'] = pd.Series(score).clip(0, 1)
     
     return df_copy
 
 
-def classify_email_types(df: pd.DataFrame, *, score_threshold: float = 0.3) -> pd.DataFrame:
+def classify_email_types(df: pd.DataFrame, *, score_threshold: float = 0.15) -> pd.DataFrame:
     """
     Classify emails as 'personal', 'automated', or 'mixed' based on automated score.
     
@@ -200,7 +415,7 @@ def get_content_summary(df: pd.DataFrame) -> pd.DataFrame:
         if col.startswith('has_'):
             summary.loc['percentage', col] = f"{(df[col].sum() / len(df) * 100):.1f}%"
     
-    return summary
+    return summary if isinstance(summary, pd.DataFrame) else pd.DataFrame()
 
 
 # Convenience function for full analysis
@@ -208,7 +423,7 @@ def analyze_email_dataframe(
     df: pd.DataFrame, *,
     text_column: str = 'text_content',
     subject_column: str = 'subject',
-    score_threshold: float = 0.3,
+    score_threshold: float = 0.15,
     show_progress: bool = True
 ) -> pd.DataFrame:
     """
@@ -227,15 +442,18 @@ def analyze_email_dataframe(
     print("📊 Starting email content analysis...")
     
     # Add content metrics
-    df_with_metrics = add_content_metrics_to_dataframe(
-        df, text_column, subject_column, show_progress
+    df_with_metrics = add_content_metrics_to_dataframe_parallel(
+        df=df, 
+        text_column=text_column, 
+        subject_column=subject_column, 
+        show_progress=show_progress
     )
     
     # Calculate automated email score
-    df_with_score = calculate_automated_email_score(df_with_metrics)
+    df_with_score = calculate_automated_email_score(df=df_with_metrics)
     
     # Classify email types
-    df_classified = classify_email_types(df_with_score, score_threshold)
+    df_classified = classify_email_types(df=df_with_score, score_threshold=score_threshold)
     
     # Print summary
     if show_progress:

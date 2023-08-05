@@ -47,7 +47,17 @@ class EmailContentAnalyzer:
         r'remove.*list',
         r'stop.*email',
         r'manage.*subscription',
-        r'email.*preference'
+        r'email.*preference',
+        r'click.*unsubscribe',
+        r'unsubscribe.*here',
+        r'to.*unsubscribe',
+        r'if.*unsubscribe',
+        r'opt.?out.*email',
+        r'remove.*email',
+        r'stop.*receiving',
+        r'no.*longer.*want',
+        r'preference.*center',
+        r'email.*settings'
     ]
     
     MARKETING_PATTERNS = [
@@ -114,13 +124,20 @@ class EmailContentAnalyzer:
         metrics = EmailMetrics()
         
         # Combine all available text for analysis
-        combined_text = self._combine_text(text_content, html_content, subject)
+        combined_text = self._combine_text(
+            text_content=text_content,
+            html_content=html_content,
+            subject=subject
+        )
         
         if not combined_text:
             return metrics
             
         # Calculate flags
-        metrics.has_unsubscribe_link = self._has_unsubscribe_indicators(combined_text, html_content)
+        metrics.has_unsubscribe_link = self._has_unsubscribe_indicators(
+            text=combined_text,
+            html_content=html_content
+        )
         metrics.has_marketing_language = bool(self.marketing_regex.search(combined_text))
         metrics.has_legal_disclaimer = bool(self.legal_regex.search(combined_text))
         metrics.has_promotional_content = self._has_promotional_content(combined_text)
@@ -136,8 +153,8 @@ class EmailContentAnalyzer:
         # Calculate ratios
         metrics.html_to_text_ratio = self._calculate_html_ratio(text_content, html_content)
         metrics.link_to_text_ratio = self._calculate_link_ratio(combined_text, html_content)
-        metrics.caps_ratio = self._calculate_caps_ratio(combined_text)
-        metrics.promotional_word_ratio = self._calculate_promotional_ratio(combined_text)
+        metrics.caps_ratio = self._calculate_caps_ratio(text=combined_text)
+        metrics.promotional_word_ratio = self._calculate_promotional_ratio(text=combined_text)
         
         return metrics
     
@@ -193,8 +210,16 @@ class EmailContentAnalyzer:
         # Look for 1x1 images or tracking domains
         tracking_patterns = [
             r'<img[^>]*(?:width=["\']1["\']|height=["\']1["\'])',
-            r'<img[^>]*src=["\'][^"\']*(?:tracking|pixel|beacon)',
-            r'<img[^>]*src=["\'][^"\']*\.gif\?'
+            r'<img[^>]*src=["\'][^"\']*(?:tracking|pixel|beacon|analytics|stats)',
+            r'<img[^>]*src=["\'][^"\']*\.gif\?',
+            r'<img[^>]*src=["\'][^"\']*\.png\?',
+            r'<img[^>]*src=["\'][^"\']*\.jpg\?',
+            r'<img[^>]*src=["\'][^"\']*\.jpeg\?',
+            r'<img[^>]*src=["\'][^"\']*utm_',
+            r'<img[^>]*src=["\'][^"\']*campaign',
+            r'<img[^>]*src=["\'][^"\']*email.*track',
+            r'<img[^>]*src=["\'][^"\']*open.*track',
+            r'<img[^>]*src=["\'][^"\']*click.*track'
         ]
         
         for pattern in tracking_patterns:
@@ -225,8 +250,23 @@ class EmailContentAnalyzer:
         if not html_content:
             return 0
             
-        img_pattern = r'<img[^>]*>'
-        return len(re.findall(img_pattern, html_content, re.IGNORECASE))
+        # Look for various image patterns
+        img_patterns = [
+            r'<img[^>]*>',  # Standard img tags
+            r'background.*image.*url',  # CSS background images
+            r'background.*url',  # CSS background images
+            r'<svg[^>]*>',  # SVG images
+            r'<canvas[^>]*>',  # Canvas elements (might contain images)
+            r'data.*image',  # Data URLs with images
+            r'base64.*image'  # Base64 encoded images
+        ]
+        
+        total_images = 0
+        for pattern in img_patterns:
+            matches = re.findall(pattern, html_content, re.IGNORECASE)
+            total_images += len(matches)
+            
+        return total_images
     
     def _count_caps_words(self, text: str) -> int:
         """Count words that are all uppercase."""
