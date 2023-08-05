@@ -32,6 +32,7 @@ class EmailMessage:
     has_attachments: bool = False
     is_read: bool = False
     is_important: bool = False
+    text_content: Optional[str] = None
     
     def to_dict(self) -> Dict[str, Any]:
         """

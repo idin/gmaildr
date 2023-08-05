@@ -7,10 +7,16 @@ This module provides a unified, easy-to-use interface for Gmail analysis.
 from datetime import datetime, timedelta
 from typing import Optional, List, Union, Literal, Dict, Any
 import pandas as pd
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import base64
 
 from .gmail_client import GmailClient
 from ..analysis.email_analyzer import EmailAnalyzer
+from ..analysis.metrics_service import MetricsService
 from .config import ConfigManager, setup_logging
+from ..utils.query_builder import build_gmail_search_query
+from ..utils.progress import EmailProgressTracker
 
 
 class Gmail:
@@ -51,6 +57,7 @@ class Gmail:
         # Initialize cache manager if caching is enabled
         self.cache_manager = None
         if enable_cache:
+            # CIRCULAR IMPORT: Cannot import at top level due to circular dependency
             from ..cache import EmailCacheManager
             self.cache_manager = EmailCacheManager()
         
@@ -260,13 +267,43 @@ class Gmail:
             
             # Add content analysis metrics if requested (separate process)
             if include_metrics and include_text:
-                from .metrics_processor import add_content_metrics_to_dataframe, calculate_automated_email_score, classify_email_types
-                
-                df = add_content_metrics_to_dataframe(df=df, show_progress=True)
-                df = calculate_automated_email_score(df=df)
-                df = classify_email_types(df=df)
+                df = MetricsService.process_metrics(
+                    df=df, 
+                    include_metrics=include_metrics, 
+                    include_text=include_text, 
+                    show_progress=True
+                )
             
             return df
+    
+    def get_api_stats(self) -> Dict[str, Any]:
+        """
+        Get API usage statistics from the Gmail client.
+        
+        Returns:
+            Dictionary with API usage statistics.
+        """
+        return self.client.get_api_stats()
+    
+    def get_cache_access_stats(self) -> Dict[str, Any]:
+        """
+        Get cache access statistics.
+        
+        Returns:
+            Dictionary with cache access statistics.
+        """
+        if self.cache_manager:
+            return self.cache_manager.get_cache_access_stats()
+        else:
+            return {
+                'cache_hits': 0,
+                'cache_misses': 0,
+                'cache_writes': 0,
+                'cache_updates': 0,
+                'total_requests': 0,
+                'hit_rate_percent': 0.0,
+                'cache_enabled': False
+            }
     
     def analyze(
         self, *,
@@ -363,6 +400,7 @@ class Gmail:
             for email in emails:
                 try:
                     # Get full message details including body
+                    self.client._track_api_call(is_text_call=True)
                     message = self.client.service.users().messages().get(
                         userId='me',
                         id=email.message_id,
@@ -378,7 +416,6 @@ class Gmail:
             # Parallel processing for batch mode with rate limiting
             from concurrent.futures import ThreadPoolExecutor, as_completed
             import time
-            from .progress import EmailProgressTracker
             
             def fetch_email_text(email_obj):
                 """Fetch text content for a single email with retry logic."""
@@ -392,6 +429,7 @@ class Gmail:
                             time.sleep(0.5)
                         
                         # Get full message details including body
+                        self.client._track_api_call(is_text_call=True)
                         message = self.client.service.users().messages().get(
                             userId='me',
                             id=email_obj.message_id,

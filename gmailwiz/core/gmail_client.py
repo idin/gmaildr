@@ -57,6 +57,11 @@ class GmailClient:
         self.service = None
         self.credentials = None
         
+        # API access counters
+        self.api_call_count = 0
+        self.text_api_call_count = 0
+        self.last_api_call_time = None
+        
     def authenticate(self) -> bool:
         """
         Authenticate with Gmail using OAuth2.
@@ -102,6 +107,34 @@ class GmailClient:
         except Exception as error:
             logger.error(f"Authentication failed: {error}")
             return False
+    
+    def _track_api_call(self, is_text_call: bool = False) -> None:
+        """
+        Track API call for monitoring purposes.
+        
+        Args:
+            is_text_call (bool): Whether this is a text content API call.
+        """
+        self.api_call_count += 1
+        if is_text_call:
+            self.text_api_call_count += 1
+        self.last_api_call_time = datetime.now()
+    
+    def get_api_stats(self) -> Dict[str, Any]:
+        """
+        Get API usage statistics.
+        
+        Returns:
+            Dictionary with API usage statistics.
+        """
+        return {
+            'total_api_calls': self.api_call_count,
+            'text_api_calls': self.text_api_call_count,
+            'general_api_calls': self.api_call_count - self.text_api_call_count,
+            'last_api_call': self.last_api_call_time.isoformat() if self.last_api_call_time else None
+        }
+    
+
     
     def get_user_profile(self) -> Optional[Dict[str, Any]]:
         """
@@ -156,6 +189,7 @@ class GmailClient:
                 if page_token:
                     request_params['pageToken'] = page_token
                 
+                self._track_api_call()
                 result = self.service.users().messages().list(**request_params).execute()
                 
                 # Extract message IDs
@@ -195,6 +229,7 @@ class GmailClient:
         
         try:
             # Get message details
+            self._track_api_call()
             message = self.service.users().messages().get(
                 userId='me',
                 id=message_id,
