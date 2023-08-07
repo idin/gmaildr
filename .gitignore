@@ -1,5 +1,6 @@
 # Project specific
 jupyter_test.py
+jupyter_t.py
 *.ipynb
 token.pickle
 credentials.json
