@@ -10,7 +10,7 @@ import unittest
 import importlib
 
 # Add the project root to the path
-from gmailwiz.utils.paths import get_project_root, get_core_dir, get_analysis_dir, get_utils_dir, get_cache_dir
+from gmailwiz.utils.paths import get_project_root, get_core_dir, get_analysis_dir, get_utils_dir, get_caching_dir
 sys.path.insert(0, str(get_project_root()))
 
 
@@ -66,7 +66,7 @@ class TestModuleStructure(unittest.TestCase):
     def test_cache_module_structure(self):
         """Test cache module structure."""
         try:
-            cache_module = importlib.import_module('gmailwiz.cache')
+            cache_module = importlib.import_module('gmailwiz.caching')
             
             # Check that cache module has expected attributes
             expected_attrs = ['EmailCacheManager', 'CacheConfig']
@@ -136,7 +136,7 @@ class TestFileOrganization(unittest.TestCase):
     
     def test_cache_files_exist(self):
         """Test that cache files exist in the right place."""
-        cache_dir = get_cache_dir()
+        cache_dir = get_caching_dir()
         expected_files = [
             '__init__.py', 'cache_config.py', 'cache_manager.py', 
             'file_storage.py', 'index_manager.py', 'schema_manager.py'

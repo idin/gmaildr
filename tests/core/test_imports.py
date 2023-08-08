@@ -67,7 +67,7 @@ class TestImports(unittest.TestCase):
     def test_cache_imports(self):
         """Test cache module imports."""
         try:
-            from gmailwiz.cache import EmailCacheManager, CacheConfig
+            from gmailwiz.caching import EmailCacheManager, CacheConfig
             print("✅ Cache imports successful")
         except ImportError as e:
             self.fail(f"Cache imports failed: {e}")

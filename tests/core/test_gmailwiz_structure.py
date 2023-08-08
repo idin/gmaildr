@@ -56,7 +56,7 @@ def test_utils_module_structure():
 
 def test_cache_module_structure():
     """Test cache module structure."""
-    cache_module = importlib.import_module('gmailwiz.cache')
+    cache_module = importlib.import_module('gmailwiz.caching')
     
     # Check that cache module has expected attributes
     expected_attrs = ['EmailCacheManager', 'CacheConfig']
@@ -122,7 +122,7 @@ def test_utils_files_exist():
 
 def test_cache_files_exist():
     """Test that cache files exist in the right place."""
-    cache_dir = project_root / 'gmailwiz' / 'cache'
+    cache_dir = project_root / 'gmailwiz' / 'caching'
     expected_files = [
         '__init__.py', 'cache_config.py', 'cache_manager.py', 
         'file_storage.py', 'index_manager.py', 'schema_manager.py'

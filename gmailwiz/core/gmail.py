@@ -58,7 +58,7 @@ class Gmail:
         self.cache_manager = None
         if enable_cache:
             # CIRCULAR IMPORT: Cannot import at top level due to circular dependency
-            from ..cache import EmailCacheManager
+            from ..caching import EmailCacheManager
             self.cache_manager = EmailCacheManager()
         
         # Auto-authenticate

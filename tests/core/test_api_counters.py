@@ -83,7 +83,7 @@ class TestCacheCounters:
     @pytest.fixture
     def cache_manager(self, temp_cache_dir):
         """Create a cache manager instance for testing."""
-        from gmailwiz.cache import EmailCacheManager
+        from gmailwiz.caching import EmailCacheManager
         return EmailCacheManager(cache_dir=temp_cache_dir)
     
     def test_initial_cache_stats(self, cache_manager):

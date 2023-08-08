@@ -52,14 +52,14 @@ def get_utils_dir() -> Path:
     return get_package_root() / 'utils'
 
 
-def get_cache_dir() -> Path:
+def get_caching_dir() -> Path:
     """
-    Get the cache module directory.
+    Get the caching module directory.
     
     Returns:
-        Path: Path to the gmailwiz/cache directory.
+        Path: Path to the gmailwiz/caching directory.
     """
-    return get_package_root() / 'cache'
+    return get_package_root() / 'caching'
 
 
 def get_project_root() -> Path:
@@ -118,13 +118,13 @@ def verify_package_structure() -> dict:
         'missing_files': [file for file in utils_files if not (utils_dir / file).exists()]
     }
     
-    # Check cache module
-    cache_dir = get_cache_dir()
-    cache_files = ['__init__.py', 'cache_config.py', 'cache_manager.py', 'file_storage.py', 'index_manager.py', 'schema_manager.py']
-    results['cache'] = {
-        'dir_exists': cache_dir.exists(),
-        'files_exist': all((cache_dir / file).exists() for file in cache_files),
-        'missing_files': [file for file in cache_files if not (cache_dir / file).exists()]
+    # Check caching module
+    caching_dir = get_caching_dir()
+    caching_files = ['__init__.py', 'cache_config.py', 'cache_manager.py', 'file_storage.py', 'index_manager.py', 'schema_manager.py']
+    results['caching'] = {
+        'dir_exists': caching_dir.exists(),
+        'files_exist': all((caching_dir / file).exists() for file in caching_files),
+        'missing_files': [file for file in caching_files if not (caching_dir / file).exists()]
     }
     
     return results
