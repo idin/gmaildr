@@ -8,6 +8,7 @@ metrics that help distinguish between personal and automated emails.
 import re
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
+from gmailwiz.utils import match_patterns
 
 
 @dataclass
@@ -33,6 +34,7 @@ class EmailMetrics:
     link_to_text_ratio: float = 0.0
     caps_ratio: float = 0.0
     promotional_word_ratio: float = 0.0
+    proper_capitalization_ratio: float = 0.0
 
 
 class EmailContentAnalyzer:
@@ -155,6 +157,7 @@ class EmailContentAnalyzer:
         metrics.link_to_text_ratio = self._calculate_link_ratio(combined_text, html_content)
         metrics.caps_ratio = self._calculate_caps_ratio(text=combined_text)
         metrics.promotional_word_ratio = self._calculate_promotional_ratio(text=combined_text)
+        metrics.proper_capitalization_ratio = self._calculate_proper_capitalization_ratio(text=combined_text)
         
         return metrics
     
@@ -183,17 +186,37 @@ class EmailContentAnalyzer:
         text: str, 
         html_content: Optional[str]
     ) -> bool:
-        """Check for unsubscribe links or text."""
-        # Check text patterns
-        if self.unsubscribe_regex.search(text):
+        """Check for unsubscribe links or text.
+
+        Uses lightweight wildcard pattern matching. Note: The legacy
+        regex-like entries in `UNSUBSCRIBE_PATTERNS` contain dots and
+        question-marks with regex semantics; here we map to simpler
+        phrases suitable for string wildcard matching.
+        """
+        simplified_patterns = [
+            "unsubscribe",
+            "opt out",
+            "opt-out",
+            "remove list",
+            "stop email",
+            "manage subscription",
+            "email preference",
+            "click unsubscribe",
+            "unsubscribe here",
+            "to unsubscribe",
+            "remove email",
+            "stop receiving",
+            "no longer want",
+            "preference center",
+            "email settings",
+        ]
+
+        if match_patterns(text, simplified_patterns):
             return True
-            
-        # Check for unsubscribe URLs in HTML
-        if html_content:
-            unsubscribe_url_pattern = r'href=["\']([^"\']*unsubscribe[^"\']*)["\']'
-            if re.search(unsubscribe_url_pattern, html_content, re.IGNORECASE):
-                return True
-                
+
+        if html_content and match_patterns(html_content, "unsubscribe"):
+            return True
+
         return False
     
     def _has_promotional_content(self, text: str) -> bool:
@@ -270,8 +293,24 @@ class EmailContentAnalyzer:
     
     def _count_caps_words(self, text: str) -> int:
         """Count words that are all uppercase."""
-        words = re.findall(r'\b[A-Z]{2,}\b', text)
-        return len(words)
+        if not text:
+            return 0
+        
+        # Split text into words and count those that are all uppercase
+        words = text.split()
+        caps_count = 0
+        
+        for word in words:
+            # Remove punctuation from the word for checking
+            clean_word = ''.join(char for char in word if char.isalnum())
+            
+            # Check if the clean word is all uppercase and has 2+ characters
+            if (len(clean_word) >= 2 and 
+                clean_word.isupper() and 
+                clean_word.isalpha()):  # Only letters, no numbers
+                caps_count += 1
+        
+        return caps_count
     
     def _calculate_html_ratio(
         self, 
@@ -307,7 +346,7 @@ class EmailContentAnalyzer:
     def _calculate_caps_ratio(self, text: str) -> float:
         """Calculate ratio of uppercase words to total words."""
         caps_count = self._count_caps_words(text)
-        total_words = len(re.findall(r'\b\w+\b', text))
+        total_words = len(text.split())
         
         if total_words == 0:
             return 0.0
@@ -324,6 +363,38 @@ class EmailContentAnalyzer:
             return 0.0
             
         return promo_count / total_words
+    
+    def _calculate_proper_capitalization_ratio(self, text: str) -> float:
+        """Calculate ratio of properly capitalized sentence-starting words."""
+        if not text:
+            return 0.0
+        
+        # Replace all sentence endings with periods
+        normalized_text = text.replace('!', '.').replace('?', '.').replace('\n', '.')
+        
+        # Split by periods to get sentences
+        sentences = normalized_text.split('.')
+        
+        properly_capitalized = 0
+        total_sentences = 0
+        
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if not sentence:
+                continue
+                
+            # Get first character that's a letter
+            for char in sentence:
+                if char.isalpha():
+                    total_sentences += 1
+                    if char.isupper():
+                        properly_capitalized += 1
+                    break
+        
+        if total_sentences == 0:
+            return 0.0
+            
+        return properly_capitalized / total_sentences
 
 
 # Global analyzer instance
@@ -346,7 +417,11 @@ def analyze_email_text(
     Returns:
         Dict[str, Any]: Dictionary of all metrics.
     """
-    metrics = analyzer.analyze_email_content(text_content, html_content, subject)
+    metrics = analyzer.analyze_email_content(
+        text_content=text_content,
+        html_content=html_content,
+        subject=subject
+    )
     
     return {
         # Flags
@@ -368,4 +443,5 @@ def analyze_email_text(
         'link_to_text_ratio': round(metrics.link_to_text_ratio, 3),
         'caps_ratio': round(metrics.caps_ratio, 3),
         'promotional_word_ratio': round(metrics.promotional_word_ratio, 3),
+        'proper_capitalization_ratio': round(metrics.proper_capitalization_ratio, 3),
     }

@@ -34,27 +34,42 @@ class EmailMessage:
     is_important: bool = False
     text_content: Optional[str] = None
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, include_text: bool = False) -> Dict[str, Any]:
         """
         Convert the email message to a dictionary representation.
         
+        Args:
+            include_text: Whether to include text_content in the dictionary
+            
         Returns:
             Dict[str, Any]: Dictionary representation of the email message.
         """
-        return {
-            "message_id": self.message_id,
-            "sender_email": self.sender_email,
-            "sender_name": self.sender_name,
-            "subject": self.subject,
-            "date_received": self.date_received.isoformat(),
-            "size_bytes": self.size_bytes,
-            "labels": self.labels,
-            "thread_id": self.thread_id,
-            "snippet": self.snippet,
-            "has_attachments": self.has_attachments,
-            "is_read": self.is_read,
-            "is_important": self.is_important,
+        row = {
+            'message_id': self.message_id,
+            'sender_email': self.sender_email,
+            'sender_name': self.sender_name,
+            'subject': self.subject,
+            'date': self.date_received,
+            'size_bytes': self.size_bytes,
+            'size_kb': self.size_bytes / 1024,
+            'size_mb': self.size_bytes / (1024 * 1024),
+            'labels': self.labels,
+            'thread_id': self.thread_id,
+            'snippet': self.snippet,
+            'has_attachments': self.has_attachments,
+            'is_read': self.is_read,
+            'is_important': self.is_important,
+            'year': self.date_received.year,
+            'month': self.date_received.month,
+            'day': self.date_received.day,
+            'hour': self.date_received.hour,
+            'day_of_week': self.date_received.strftime('%A'),
         }
+        
+        if include_text and self.text_content is not None:
+            row['text_content'] = self.text_content
+            
+        return row
 
 
 @dataclass

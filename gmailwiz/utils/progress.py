@@ -42,12 +42,14 @@ class EmailProgressTracker:
         mode_text = " (batch mode)" if use_batch_mode else ""
         full_desc = f"{emoji} {description}{mode_text}"
         
+        # Create a custom bar format with percentage inside the bar
+        percentage_format = "{percentage:3.0f}%"
         self.progress_bar = tqdm(
             total=total,
             desc=full_desc,
             unit="email",
             colour="green",
-            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} emails [{elapsed}<{remaining}]"
+            bar_format="{bar}| {n_fmt}/{total_fmt} emails [{elapsed}<{remaining}] {postfix}"
         )
     
     def update(self, count: int = 1) -> None:
@@ -70,6 +72,15 @@ class EmailProgressTracker:
         mode_text = " (batch mode)" if self.use_batch_mode else ""
         full_desc = f"{emoji} {description}{mode_text}"
         self.progress_bar.set_description(full_desc)
+    
+    def set_postfix(self, message: str) -> None:
+        """
+        Set a postfix message that appears after the progress bar.
+        
+        Args:
+            message (str): Message to display after the progress bar.
+        """
+        self.progress_bar.set_postfix_str(message)
     
     def close(self) -> None:
         """Close the progress bar."""

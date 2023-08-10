@@ -7,11 +7,14 @@ to ensure consistency between cached and non-cached email retrieval.
 
 from datetime import datetime, timedelta
 from typing import Optional, Union, List, Literal
+from .date_utils import parse_date_range
 
 
 def build_gmail_search_query(
     *, 
-    days: int,
+    days: Optional[int] = None,
+    start_date: Optional[Union[datetime, str]] = None,
+    end_date: Optional[Union[datetime, str]] = None,
     from_sender: Optional[Union[str, List[str]]] = None,
     subject_contains: Optional[str] = None,
     subject_does_not_contain: Optional[str] = None,
@@ -38,13 +41,19 @@ def build_gmail_search_query(
     Returns:
         str: Gmail search query string.
     """
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=days)
+    # Parse date range using utility function
+    date_range = parse_date_range(
+        days=days,
+        start_date=start_date,
+        end_date=end_date
+    )
+    query_start_date = date_range['start_date']
+    query_end_date = date_range['end_date']
     
     # Build Gmail search query
     query_parts = []
-    query_parts.append(f"after:{start_date.strftime('%Y/%m/%d')}")
-    query_parts.append(f"before:{end_date.strftime('%Y/%m/%d')}")
+    query_parts.append(f"after:{query_start_date.strftime('%Y/%m/%d')}")
+    query_parts.append(f"before:{query_end_date.strftime('%Y/%m/%d')}")
     
     if from_sender:
         if isinstance(from_sender, str):

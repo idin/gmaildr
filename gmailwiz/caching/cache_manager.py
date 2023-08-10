@@ -105,10 +105,6 @@ class EmailCacheManager:
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
         
-        # Get cached message IDs in date range
-        cached_message_ids = self.index_manager.get_cached_message_ids(start_date=start_date, end_date=end_date)
-        logger.info(f"Found {len(cached_message_ids)} cached emails in date range")
-        
         # Build query for fresh message IDs using shared utility
         from ..utils.query_builder import build_gmail_search_query
         query = build_gmail_search_query(
@@ -129,11 +125,14 @@ class EmailCacheManager:
         )
         logger.info(f"Found {len(fresh_message_ids)} fresh emails from Gmail")
         
+        # Get cached message IDs in date range
+        cached_message_ids = self.index_manager.get_cached_message_ids(start_date=start_date, end_date=end_date)
+        logger.info(f"Found {len(cached_message_ids)} cached emails in date range")
+        
         # Determine which emails to fetch
         new_message_ids = set(fresh_message_ids) - cached_message_ids
         logger.info(f"Need to fetch {len(new_message_ids)} new emails")
         
-        # Load cached emails
         cache_result = self._load_cached_emails(
             message_ids=cached_message_ids, 
             include_text=include_text
@@ -160,7 +159,13 @@ class EmailCacheManager:
         
         # Convert to DataFrame
         from ..core.gmail import Gmail
-        df = Gmail._emails_to_dataframe(emails=all_emails, include_text=include_text)
+        gmail_instance = Gmail()
+        df = gmail_instance._emails_to_dataframe(emails=all_emails, include_text=include_text)
+        
+        # Apply max_emails limit to final result if specified
+        if max_emails is not None and len(df) > max_emails:
+            df = df.head(max_emails)
+            logger.info(f"Limited final result to {len(df)} emails to respect max_emails={max_emails}")
         
         # Add metrics if requested
         if include_metrics and include_text:
@@ -423,7 +428,8 @@ class EmailCacheManager:
             emails = gmail_instance._add_email_text(emails=emails, parallelize=parallelize_text_fetch)
         
         # Convert to DataFrame
-        df = Gmail._emails_to_dataframe(emails=emails, include_text=include_text)
+        gmail_instance = Gmail()
+        df = gmail_instance._emails_to_dataframe(emails=emails, include_text=include_text)
         
         # Add metrics if requested
         if include_metrics and include_text:
@@ -491,15 +497,28 @@ class EmailCacheManager:
             'cache_enabled': self.config.enable_cache
         }
     
-    def cleanup_cache(self, max_age_days: Optional[int] = None) -> int:
+    def cleanup_cache(self, max_age_days: Optional[int] = -1) -> int:
         """
-        Clean up old cached emails.
+        Clean up old cached emails by deleting emails older than specified days.
+        
+        This method removes cached email files that are older than the specified
+        number of days, helping to manage disk space and keep cache fresh.
         
         Args:
-            max_age_days: Maximum age in days. Uses config default if None.
+            max_age_days: Maximum age in days before emails are deleted.
+                         If None, uses the default from cache configuration.
+                         
+                         Examples:
+                         - max_age_days=7: Delete emails older than 1 week
+                         - max_age_days=30: Delete emails older than 1 month
+                         - max_age_days=90: Delete emails older than 3 months
             
         Returns:
-            Number of emails deleted.
+            Number of emails deleted from cache.
+            
+        Example:
+            >>> cache_manager.cleanup_cache(max_age_days=30)
+            15  # Deleted 15 emails older than 30 days
         """
         if max_age_days is None:
             max_age_days = self.config.max_cache_age_days

@@ -83,6 +83,14 @@ A Python tool for analyzing and cleaning Gmail accounts with comprehensive email
 - [x] **Parallel Text Analysis**: Verify if text analysis is actually running in parallel
 - [x] **Zero Metrics Issue**: Fixed HTML-based metrics to use proper EmailContentAnalyzer parsing
 
+### API Design Issues & Improvements Needed
+- [ ] **Elegant Email Operations**: Current API requires DataFrame → column → list conversion, needs more elegant methods
+- [ ] **Label vs Folder Semantics**: Should treat trash/inbox/archive as folders, not labels for better user experience
+- [ ] **Single vs List Parameters**: `remove_labels=['TRASH']` should be `remove_labels='TRASH'` for single items
+- [ ] **Method Chaining**: Enable fluent API design for email operations
+- [ ] **Direct Email Operations**: Methods that work directly on email objects, not just IDs
+- [ ] **Folder-Specific Methods**: Dedicated methods like `move_to_trash()`, `move_to_archive()`, `move_to_inbox()`
+
 ### Human Email Detection Issues & Limitations
 - [ ] **Language Support**: Limited to English language patterns, needs multi-language support
 - [ ] **False Positives**: Well-written automated emails may be classified as human
@@ -107,6 +115,13 @@ A Python tool for analyzing and cleaning Gmail accounts with comprehensive email
   - ✅ Mock objects incorrectly have text_content attribute - FIXED
   - ✅ AttributeError tests not catching expected errors - FIXED
   - ✅ File storage path issues with Mock objects - FIXED
+- [ ] **Metrics Processing Issues**:
+  - caps_ratio always showing zero - needs investigation
+- [ ] **Label Modification Issues**:
+  - modify_labels reports success but doesn't actually apply labels to emails
+  - API returns success for all operations but emails don't have labels applied
+  - Test confirms: 1/1 reported successful, 0/1 actually labeled
+  - Affects both single and batch label operations
 - [x] **Module Structure Test Failures**:
   - ✅ Missing __init__.py files in core, utils, analysis, cache directories - FIXED
   - ✅ File organization tests failing due to missing files - FIXED

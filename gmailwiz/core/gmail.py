@@ -17,6 +17,7 @@ from ..analysis.metrics_service import MetricsService
 from .config import ConfigManager, setup_logging
 from ..utils.query_builder import build_gmail_search_query
 from ..utils.progress import EmailProgressTracker
+from ..utils.query_builder import build_gmail_search_query
 
 
 class Gmail:
@@ -157,7 +158,9 @@ class Gmail:
     
     def get_emails(
         self, *,
-        days: int = 30,
+        days: Optional[int] = None,
+        start_date: Optional[Union[datetime, str]] = None,
+        end_date: Optional[Union[datetime, str]] = None,
         max_emails: Optional[int] = None,
         from_sender: Optional[Union[str, List[str]]] = None,
         subject_contains: Optional[str] = None,
@@ -176,8 +179,11 @@ class Gmail:
         Get emails as a pandas DataFrame with filtering options.
         
         Args:
-            days (int): Number of days to retrieve emails from.
-            max_emails (int): Maximum number of emails to retrieve.
+            days (Optional[int]): Number of days to retrieve emails from (default: 30, handled by query builder).
+                SHOULD BE NONE if start_date and end_date are provided otherwise raises ValueError
+            start_date (Optional[Union[datetime, str]]): Start date for email search.
+            end_date (Optional[Union[datetime, str]]): End date for email search.
+            max_emails (Optional[int]): Maximum number of emails to retrieve.
             from_sender (Optional[Union[str, List[str]]]): Filter by sender email address(es).
             subject_contains (Optional[str]): Filter by text in subject line.
                 Example: subject_contains = "Amazon & (order | tracking)"
@@ -196,22 +202,24 @@ class Gmail:
         Returns:
             pd.DataFrame: DataFrame containing filtered email data.
         """
-        # Check if any filters are being used (including date range)
+        # Check if any filters are being used (excluding date range)
         has_filters = any([
-            days is not None,  # Non-default date range
             from_sender, subject_contains, subject_does_not_contain, 
             has_attachment is not None, is_unread is not None, 
             is_important is not None, in_folder, is_starred is not None
         ])
         
         # Set default max_emails: no limit when using filters, 1000 when using defaults only
+        # Always respect user's explicit max_emails parameter
         if max_emails is None:
             max_emails = None if has_filters else 1000
         
         # Build search query using shared utility
-        from ..utils.query_builder import build_gmail_search_query
+        
         query = build_gmail_search_query(
             days=days,
+            start_date=start_date,
+            end_date=end_date,
             from_sender=from_sender,
             subject_contains=subject_contains,
             subject_does_not_contain=subject_does_not_contain,
@@ -251,7 +259,7 @@ class Gmail:
             # Fall back to direct API calls (original implementation)
             # Get detailed email information
             emails = []
-            for batch in self.client.get_messages_batch(message_ids, batch_size=25, use_api_batch=use_batch):
+            for batch in self.client.get_messages_batch(message_ids=message_ids, batch_size=25, use_api_batch=use_batch):
                 emails.extend(batch)
             
             # Validate include_metrics requires include_text
@@ -526,8 +534,7 @@ class Gmail:
         else:
             return extract_text_from_part(payload)
     
-    @classmethod
-    def _emails_to_dataframe(cls, emails: List, include_text: bool = False) -> pd.DataFrame:
+    def _emails_to_dataframe(self, emails: List, include_text: bool = False) -> pd.DataFrame:
         """
         Convert email objects to pandas DataFrame.
         
@@ -540,38 +547,16 @@ class Gmail:
         """
         data = []
         for email in emails:
-            row = {
-                'message_id': email.message_id,
-                'sender_email': email.sender_email,
-                'sender_name': email.sender_name,
-                'subject': email.subject,
-                'date_received': email.date_received,
-                'size_bytes': email.size_bytes,
-                'size_kb': email.size_bytes / 1024,
-                'size_mb': email.size_bytes / (1024 * 1024),
-                'labels': ','.join(email.labels),
-                'thread_id': email.thread_id,
-                'snippet': email.snippet,
-                'has_attachments': email.has_attachments,
-                'in_folder': cls._determine_folder(email),
-                'is_read': email.is_read,
-                'is_important': email.is_important,
-                'year': email.date_received.year,
-                'month': email.date_received.month,
-                'day': email.date_received.day,
-                'hour': email.date_received.hour,
-                'day_of_week': email.date_received.strftime('%A'),
-            }
-            
-            if include_text and hasattr(email, 'text_content'):
-                row['text_content'] = email.text_content
-            
+            row = email.to_dict(include_text=include_text)
+            row['in_folder'] = self._determine_folder(email)
             data.append(row)
         
-        return pd.DataFrame(data)
+        from .email_dataframe import EmailDataFrame
+        df = EmailDataFrame(data)
+        df.set_gmail_client(self)
+        return df
     
-    @staticmethod
-    def _determine_folder(email) -> str:
+    def _determine_folder(self, email) -> str:
         """
         Determine which folder an email is in based on its labels.
         
@@ -619,27 +604,36 @@ class Gmail:
         Returns:
             bool: True if modification was successful, False otherwise.
         """
-        return self.client.modify_email_labels(message_id, add_labels, remove_labels)
+        return self.client.modify_email_labels(message_id=message_id, add_labels=add_labels, remove_labels=remove_labels)
     
-    def mark_as_read(self, message_id: str) -> bool:
-        """Mark an email as read."""
-        return self.client.mark_as_read(message_id)
+    def mark_as_read(self, message_id: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
+        """Mark email(s) as read."""
+        if isinstance(message_id, str):
+            return self.client.mark_as_read(message_id)
+        else:
+            return self.client.batch_mark_as_read(message_ids=message_id, show_progress=show_progress)
     
     def mark_as_unread(self, message_id: str) -> bool:
         """Mark an email as unread."""
         return self.client.mark_as_unread(message_id)
     
-    def star_email(self, message_id: str) -> bool:
-        """Star an email."""
-        return self.client.star_email(message_id)
+    def star_email(self, message_id: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
+        """Star email(s)."""
+        if isinstance(message_id, str):
+            return self.client.star_email(message_id)
+        else:
+            return self.client.batch_star_emails(message_ids=message_id, show_progress=show_progress)
     
     def unstar_email(self, message_id: str) -> bool:
         """Remove star from an email."""
         return self.client.unstar_email(message_id)
     
-    def move_to_trash(self, message_id: str) -> bool:
-        """Move an email to trash."""
-        return self.client.move_to_trash(message_id)
+    def move_to_trash(self, message_id: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
+        """Move email(s) to trash."""
+        if isinstance(message_id, str):
+            return self.client.move_to_trash(message_id)
+        else:
+            return self.client.batch_move_to_trash(message_ids=message_id, show_progress=show_progress)
     
     def move_to_inbox(self, message_id: str) -> bool:
         """Move an email to inbox."""
@@ -649,27 +643,123 @@ class Gmail:
         """Archive an email."""
         return self.client.archive_email(message_id)
     
-    def batch_modify_labels(
+    def move_to_archive(self, message_ids: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
+        """
+        Move emails to archive (remove INBOX and TRASH labels).
+        
+        Args:
+            message_ids: Single message ID or list of message IDs
+            show_progress: Whether to show progress bar
+            
+        Returns:
+            bool or Dict[str, bool]: Success status
+        """
+        if isinstance(message_ids, str):
+            message_ids = [message_ids]
+        return self.modify_labels(
+            message_ids=message_ids,
+            remove_labels=['INBOX', 'TRASH'],
+            show_progress=show_progress
+        )
+    
+    def add_label(self, message_ids: Union[str, List[str]], label: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
+        """
+        Add label(s) to emails.
+        
+        Args:
+            message_ids: Single message ID or list of message IDs
+            label: Single label name or list of label names
+            show_progress: Whether to show progress bar
+            
+        Returns:
+            bool or Dict[str, bool]: Success status
+        """
+        if isinstance(message_ids, str):
+            message_ids = [message_ids]
+        return self.modify_labels(
+            message_ids=message_ids,
+            add_labels=label,
+            show_progress=show_progress
+        )
+    
+    def remove_label(self, message_ids: Union[str, List[str]], label: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
+        """
+        Remove label(s) from emails.
+        
+        Args:
+            message_ids: Single message ID or list of message IDs
+            label: Single label name or list of label names
+            show_progress: Whether to show progress bar
+            
+        Returns:
+            bool or Dict[str, bool]: Success status
+        """
+        if isinstance(message_ids, str):
+            message_ids = [message_ids]
+        return self.modify_labels(
+            message_ids=message_ids,
+            remove_labels=label,
+            show_progress=show_progress
+        )
+    
+    def modify_labels(
         self,
         message_ids: List[str],
-        add_labels: Optional[List[str]] = None,
-        remove_labels: Optional[List[str]] = None,
+        add_labels: Optional[Union[List[str], str]] = None,
+        remove_labels: Optional[Union[List[str], str]] = None,
         show_progress: bool = True
     ) -> Dict[str, bool]:
         """Modify labels for multiple email messages in batch."""
-        return self.client.batch_modify_labels(message_ids, add_labels, remove_labels, show_progress)
+        if isinstance(add_labels, str):
+            add_labels = [add_labels]
+        if isinstance(remove_labels, str):
+            remove_labels = [remove_labels]
+        
+        # Convert label names to IDs if needed
+        processed_add_labels = self._process_labels_for_api(add_labels) if add_labels else None
+        processed_remove_labels = self._process_labels_for_api(remove_labels) if remove_labels else None
+        
+        return self.client.batch_modify_labels(
+            message_ids=message_ids,
+            add_labels=processed_add_labels,
+            remove_labels=processed_remove_labels,
+            show_progress=show_progress
+        )
     
-    def batch_mark_as_read(self, message_ids: List[str], show_progress: bool = True) -> Dict[str, bool]:
-        """Mark multiple emails as read."""
-        return self.client.batch_mark_as_read(message_ids, show_progress)
-    
-    def batch_star_emails(self, message_ids: List[str], show_progress: bool = True) -> Dict[str, bool]:
-        """Star multiple emails."""
-        return self.client.batch_star_emails(message_ids, show_progress)
-    
-    def batch_move_to_trash(self, message_ids: List[str], show_progress: bool = True) -> Dict[str, bool]:
-        """Move multiple emails to trash."""
-        return self.client.batch_move_to_trash(message_ids, show_progress)
+
+
+    def _process_labels_for_api(self, labels: List[str]) -> List[str]:
+        """
+        Process labels for Gmail API - convert names to IDs for custom labels.
+        
+        Args:
+            labels: List of label names or IDs
+            
+        Returns:
+            List of processed labels (names for system labels, IDs for custom labels)
+        """
+        if not labels:
+            return []
+        
+        processed_labels = []
+        for label in labels:
+            # System labels (INBOX, SENT, etc.) use names
+            if label.upper() in ['INBOX', 'SENT', 'DRAFT', 'SPAM', 'TRASH', 'STARRED', 'UNREAD', 'IMPORTANT']:
+                processed_labels.append(label)
+            else:
+                # Custom labels need ID conversion
+                label_id = self.get_label_id(label)
+                if label_id:
+                    processed_labels.append(label_id)
+                else:
+                    # If label doesn't exist, try to create it
+                    label_id = self.create_label(label)
+                    if label_id:
+                        processed_labels.append(label_id)
+                    else:
+                        print(f"Warning: Could not find or create label: {label}")
+        
+        return processed_labels
     
     def get_labels(self) -> List[Dict[str, Any]]:
         """Get all available labels in the Gmail account."""
@@ -682,6 +772,360 @@ class Gmail:
     def delete_label(self, label_id: str) -> bool:
         """Delete a custom label."""
         return self.client.delete_label(label_id)
+    
+    def get_label_id(self, label_name: str) -> Optional[str]:
+        """
+        Get the ID of a label by name.
+        
+        Args:
+            label_name (str): Name of the label to find
+            
+        Returns:
+            Optional[str]: Label ID if found, None otherwise
+            
+        Example:
+            >>> gmail.get_label_id('INBOX')
+            'INBOX'
+            >>> gmail.get_label_id('wiz_trash')
+            'Label_123456789'
+        """
+        labels = self.get_labels()
+        for label in labels:
+            if label.get('name') == label_name:
+                return label.get('id')
+        return None
+    
+    def has_label(self, label_name: str) -> bool:
+        """
+        Check if a label exists in the Gmail account.
+        
+        Args:
+            label_name (str): Name of the label to check
+            
+        Returns:
+            bool: True if label exists, False otherwise
+            
+        Example:
+            >>> gmail.has_label('INBOX')
+            True
+            >>> gmail.has_label('wiz_trash')
+            False
+        """
+        return self.get_label_id(label_name) is not None
+    
+    def get_label_id_or_create(self, label_name: str, label_list_visibility: str = 'labelShow') -> Optional[str]:
+        """
+        Get the ID of a label by name, creating it if it doesn't exist.
+        
+        Args:
+            label_name (str): Name of the label to find or create
+            label_list_visibility (str): Label list visibility setting for new labels
+            
+        Returns:
+            Optional[str]: Label ID if found or created successfully, None if failed
+            
+        Example:
+            >>> gmail.get_label_id_or_create('wiz_trash')
+            'Label_123456789'
+            >>> gmail.get_label_id_or_create('INBOX')
+            'INBOX'
+        """
+        # First try to get existing label ID
+        label_id = self.get_label_id(label_name)
+        if label_id:
+            return label_id
+        
+        # If label doesn't exist, create it
+        return self.create_label(label_name, label_list_visibility)
+    
+    def get_trash_emails(
+        self, *,
+        days: int = 365,
+        max_emails: Optional[int] = None,
+        include_text: bool = False,
+        include_metrics: bool = False,
+        use_batch: bool = True,
+        parallelize_text_fetch: bool = False
+    ) -> pd.DataFrame:
+        """
+        Get emails from the trash folder.
+        
+        Args:
+            days (int): Number of days to look back (default: 365)
+            max_emails (Optional[int]): Maximum number of emails to retrieve
+            include_text (bool): Include email body text content
+            include_metrics (bool): Include content analysis metrics
+            use_batch (bool): Use Gmail API batch requests for better performance
+            parallelize_text_fetch (bool): Parallelize text content fetching
+            
+        Returns:
+            pd.DataFrame: DataFrame containing trash emails
+            
+        Example:
+            >>> df = gmail.get_trash_emails(days=30, max_emails=100)
+            >>> print(f"Found {len(df)} emails in trash")
+        """
+        return self.get_emails(
+            days=days,
+            max_emails=max_emails,
+            in_folder='trash',
+            include_text=include_text,
+            include_metrics=include_metrics,
+            use_batch=use_batch,
+            parallelize_text_fetch=parallelize_text_fetch
+        )
+    
+    def get_archive_emails(
+        self, *,
+        days: int = 365,
+        max_emails: Optional[int] = None,
+        include_text: bool = False,
+        include_metrics: bool = False,
+        use_batch: bool = True,
+        parallelize_text_fetch: bool = False
+    ) -> pd.DataFrame:
+        """
+        Get emails from the archive (not in inbox).
+        
+        Args:
+            days (int): Number of days to look back (default: 365)
+            max_emails (Optional[int]): Maximum number of emails to retrieve
+            include_text (bool): Include email body text content
+            include_metrics (bool): Include content analysis metrics
+            use_batch (bool): Use Gmail API batch requests for better performance
+            parallelize_text_fetch (bool): Parallelize text content fetching
+            
+        Returns:
+            pd.DataFrame: DataFrame containing archived emails
+            
+        Example:
+            >>> df = gmail.get_archive_emails(days=30, max_emails=100)
+            >>> print(f"Found {len(df)} archived emails")
+        """
+        return self.get_emails(
+            days=days,
+            max_emails=max_emails,
+            in_folder='archive',
+            include_text=include_text,
+            include_metrics=include_metrics,
+            use_batch=use_batch,
+            parallelize_text_fetch=parallelize_text_fetch
+        )
+    
+    def get_inbox_emails(
+        self, *,
+        days: int = 30,
+        max_emails: Optional[int] = None,
+        include_text: bool = False,
+        include_metrics: bool = False,
+        use_batch: bool = True,
+        parallelize_text_fetch: bool = False
+    ) -> pd.DataFrame:
+        """
+        Get emails from the inbox.
+        
+        Args:
+            days (int): Number of days to look back (default: 30)
+            max_emails (Optional[int]): Maximum number of emails to retrieve
+            include_text (bool): Include email body text content
+            include_metrics (bool): Include content analysis metrics
+            use_batch (bool): Use Gmail API batch requests for better performance
+            parallelize_text_fetch (bool): Parallelize text content fetching
+            
+        Returns:
+            pd.DataFrame: DataFrame containing inbox emails
+            
+        Example:
+            >>> df = gmail.get_inbox_emails(days=7, max_emails=50)
+            >>> print(f"Found {len(df)} emails in inbox")
+        """
+        return self.get_emails(
+            days=days,
+            max_emails=max_emails,
+            in_folder='inbox',
+            include_text=include_text,
+            include_metrics=include_metrics,
+            use_batch=use_batch,
+            parallelize_text_fetch=parallelize_text_fetch
+        )
+    
+    def get_inbox_size(
+        self, *,
+        days: int = 365,
+        from_sender: Optional[Union[str, List[str]]] = None,
+        subject_contains: Optional[str] = None,
+        subject_does_not_contain: Optional[str] = None,
+        has_attachment: Optional[bool] = None,
+        is_unread: Optional[bool] = None,
+        is_important: Optional[bool] = None,
+        is_starred: Optional[bool] = None
+    ) -> int:
+        """
+        Get the count of emails in the inbox.
+        
+        Args:
+            days (int): Number of days to look back (default: 365)
+            from_sender: Filter by sender email address(es)
+            subject_contains: Filter by text in subject line
+            subject_does_not_contain: Filter by text not in subject line
+            has_attachment: Filter by attachment presence
+            is_unread: Filter by read/unread status
+            is_important: Filter by importance
+            is_starred: Filter by starred status
+            
+        Returns:
+            int: Number of emails in inbox
+            
+        Example:
+            >>> count = gmail.get_inbox_size(days=30, is_unread=True)
+            >>> print(f"Inbox has {count} unread emails")
+        """
+        return self.count_emails(
+            days=days,
+            in_folder='inbox',
+            from_sender=from_sender,
+            subject_contains=subject_contains,
+            subject_does_not_contain=subject_does_not_contain,
+            has_attachment=has_attachment,
+            is_unread=is_unread,
+            is_important=is_important,
+            is_starred=is_starred
+        )
+    
+    def get_trash_size(
+        self, *,
+        days: int = 365,
+        from_sender: Optional[Union[str, List[str]]] = None,
+        subject_contains: Optional[str] = None,
+        subject_does_not_contain: Optional[str] = None,
+        has_attachment: Optional[bool] = None,
+        is_unread: Optional[bool] = None,
+        is_important: Optional[bool] = None,
+        is_starred: Optional[bool] = None
+    ) -> int:
+        """
+        Get the count of emails in the trash.
+        
+        Args:
+            days (int): Number of days to look back (default: 365)
+            from_sender: Filter by sender email address(es)
+            subject_contains: Filter by text in subject line
+            subject_does_not_contain: Filter by text not in subject line
+            has_attachment: Filter by attachment presence
+            is_unread: Filter by read/unread status
+            is_important: Filter by importance
+            is_starred: Filter by starred status
+            
+        Returns:
+            int: Number of emails in trash
+            
+        Example:
+            >>> count = gmail.get_trash_size(days=30, has_attachment=True)
+            >>> print(f"Trash has {count} emails with attachments")
+        """
+        return self.count_emails(
+            days=days,
+            in_folder='trash',
+            from_sender=from_sender,
+            subject_contains=subject_contains,
+            subject_does_not_contain=subject_does_not_contain,
+            has_attachment=has_attachment,
+            is_unread=is_unread,
+            is_important=is_important,
+            is_starred=is_starred
+        )
+    
+    def get_archive_size(
+        self, *,
+        days: int = 365,
+        from_sender: Optional[Union[str, List[str]]] = None,
+        subject_contains: Optional[str] = None,
+        subject_does_not_contain: Optional[str] = None,
+        has_attachment: Optional[bool] = None,
+        is_unread: Optional[bool] = None,
+        is_important: Optional[bool] = None,
+        is_starred: Optional[bool] = None
+    ) -> int:
+        """
+        Get the count of emails in the archive (not in inbox).
+        
+        Args:
+            days (int): Number of days to look back (default: 365)
+            from_sender: Filter by sender email address(es)
+            subject_contains: Filter by text in subject line
+            subject_does_not_contain: Filter by text not in subject line
+            has_attachment: Filter by attachment presence
+            is_unread: Filter by read/unread status
+            is_important: Filter by importance
+            is_starred: Filter by starred status
+            
+        Returns:
+            int: Number of emails in archive
+            
+        Example:
+            >>> count = gmail.get_archive_size(days=30, from_sender='example@gmail.com')
+            >>> print(f"Archive has {count} emails from example@gmail.com")
+        """
+        return self.count_emails(
+            days=days,
+            in_folder='archive',
+            from_sender=from_sender,
+            subject_contains=subject_contains,
+            subject_does_not_contain=subject_does_not_contain,
+            has_attachment=has_attachment,
+            is_unread=is_unread,
+            is_important=is_important,
+            is_starred=is_starred
+        )
+    
+    def count_emails(
+        self, *,
+        days: int = 365,
+        from_sender: Optional[Union[str, List[str]]] = None,
+        subject_contains: Optional[str] = None,
+        subject_does_not_contain: Optional[str] = None,
+        has_attachment: Optional[bool] = None,
+        is_unread: Optional[bool] = None,
+        is_important: Optional[bool] = None,
+        in_folder: Optional[Literal['inbox', 'archive', 'spam', 'trash', 'drafts', 'sent']] = None,
+        is_starred: Optional[bool] = None
+    ) -> int:
+        """
+        Count emails based on specified filters.
+        
+        Args:
+            days (int): Number of days to look back (default: 365)
+            from_sender: Filter by sender email address(es)
+            subject_contains: Filter by text in subject line
+            subject_does_not_contain: Filter by text not in subject line
+            has_attachment: Filter by attachment presence
+            is_unread: Filter by read/unread status
+            is_important: Filter by importance
+            in_folder: Filter by folder
+            is_starred: Filter by starred status
+            
+        Returns:
+            int: Number of emails matching the filters
+            
+        Example:
+            >>> count = gmail.count_emails(days=30, from_sender='example@gmail.com')
+            >>> print(f"Found {count} emails from example@gmail.com")
+        """
+        return len(self.get_emails(
+            days=days,
+            max_emails=None,
+            from_sender=from_sender,
+            subject_contains=subject_contains,
+            subject_does_not_contain=subject_does_not_contain,
+            has_attachment=has_attachment,
+            is_unread=is_unread,
+            is_important=is_important,
+            in_folder=in_folder,
+            is_starred=is_starred,
+            include_text=False,
+            include_metrics=False,
+            use_batch=True
+        ))
     
     # ============================================================================
     # CACHE MANAGEMENT METHODS
@@ -698,15 +1142,28 @@ class Gmail:
             return {"error": "Cache not enabled"}
         return self.cache_manager.get_cache_stats()
     
-    def cleanup_cache(self, max_age_days: Optional[int] = None) -> int:
+    def cleanup_cache(self, max_age_days: Optional[int] = -1) -> int:
         """
-        Clean up old cached emails.
+        Clean up old cached emails by deleting emails older than specified days.
+        
+        This method removes cached email files that are older than the specified
+        number of days, helping to manage disk space and keep cache fresh.
         
         Args:
-            max_age_days: Maximum age in days. Uses config default if None.
+            max_age_days: Maximum age in days before emails are deleted.
+                         If None, uses the default from cache configuration.
+                         
+                         Examples:
+                         - max_age_days=7: Delete emails older than 1 week
+                         - max_age_days=30: Delete emails older than 1 month
+                         - max_age_days=90: Delete emails older than 3 months
             
         Returns:
-            Number of emails deleted.
+            Number of emails deleted from cache.
+            
+        Example:
+            >>> gmail.cleanup_cache(max_age_days=30)
+            15  # Deleted 15 emails older than 30 days
         """
         if not self.cache_manager:
             return 0

@@ -13,6 +13,111 @@ A powerful Gmail analysis, management, and automation wizard. Connect to Gmail a
 - ⚡ **Batch Processing** - Efficient handling of large email volumes
 - 🎨 **Rich Console Output** - Beautiful terminal output with tables and progress bars
 
+## Quick Examples
+
+### 📅 Date Range Queries
+```python
+from gmailwiz import Gmail
+from datetime import datetime, timedelta
+
+gmail = Gmail()
+
+# Get emails from last 7 days
+emails = gmail.get_emails(days=7)
+
+# Get emails from specific date range
+start_date = datetime(2024, 1, 1)
+end_date = '2024-01-05' # it can be an iso date
+emails = gmail.get_emails(start_date=start_date, end_date=end_date)
+
+# Get emails from a start date for 30 days
+start_date = '2024-01-01'
+emails = gmail.get_emails(start_date=start_date, days=30)
+
+# Get emails ending at a specific date, going back 7 days
+end_date = datetime(2024, 1, 31)
+emails = gmail.get_emails(end_date=end_date, days=7)
+```
+
+### 🗑️ Trash Management
+```python
+# Move all emails in trash from past year to archive
+from datetime import datetime, timedelta
+
+gmail = Gmail()
+end_date = datetime.now()
+
+# Get all emails in trash from past year
+trash_emails = gmail.get_emails(
+    start_date=start_date,
+    end_date=end_date,
+    in_folder='trash',
+    days=365
+)
+
+# Move them to archive
+message_ids = trash_emails['message_id'].tolist()
+gmail.modify_labels(message_ids=message_ids, remove_labels='TRASH')
+```
+
+### 📧 Email Analysis with Filters
+```python
+# Get unread emails from specific sender in last month
+emails = gmail.get_emails(
+    days=30,
+    from_sender="noreply@example.com",
+    is_unread=True
+)
+
+# Get important emails with attachments
+emails = gmail.get_emails(
+    days=7,
+    is_important=True,
+    has_attachment=True
+)
+
+# Get emails from multiple senders
+emails = gmail.get_emails(
+    days=14,
+    from_sender=["support@company.com", "billing@company.com"]
+)
+```
+
+### 🏷️ Label Management
+```python
+# Create a custom label
+label_id = gmail.get_label_id_or_create("Important_Work")
+
+# Apply label to emails from specific sender
+work_emails = gmail.get_emails(
+    days=30,
+    from_sender="boss@company.com"
+)
+gmail.modify_labels(
+    message_ids=work_emails['message_id'].tolist(),
+    add_labels=label_id
+)
+
+# Check if label exists
+if gmail.has_label("Project_Alpha"):
+    print("Project_Alpha label exists")
+```
+
+### 📊 Batch Operations
+```python
+# Mark multiple emails as read
+emails = gmail.get_emails(days=1, is_unread=True)
+gmail.mark_as_read(emails['message_id'].tolist())
+
+# Star important emails
+important_emails = gmail.get_emails(days=7, is_important=True)
+gmail.star_email(important_emails['message_id'].tolist())
+
+# Move emails to trash
+old_emails = gmail.get_emails(days=365, is_unread=True)
+gmail.move_to_trash(old_emails['message_id'].tolist())
+```
+
 ## Installation
 
 ### From Source

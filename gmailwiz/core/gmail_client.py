@@ -437,7 +437,7 @@ class GmailClient:
                                 response = batch_responses.get(message_id)
                                 if response:
                                     email_message = self._convert_api_response_to_email_message(
-                                        message_id, response
+                                        message_id=message_id, message=response
                                     )
                                     if email_message:
                                         batch_messages.append(email_message)
@@ -789,7 +789,7 @@ class GmailClient:
         return self.modify_email_labels(message_id, remove_labels=['INBOX'])
     
     def batch_modify_labels(
-        self,
+        self, *,
         message_ids: List[str],
         add_labels: Optional[List[str]] = None,
         remove_labels: Optional[List[str]] = None,
