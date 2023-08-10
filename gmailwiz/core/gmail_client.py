@@ -866,7 +866,7 @@ class GmailClient:
         Returns:
             Dict[str, bool]: Dictionary mapping message_id to success status.
         """
-        return self.batch_modify_labels(message_ids, remove_labels=['UNREAD'], show_progress=show_progress)
+        return self.batch_modify_labels(message_ids=message_ids, remove_labels=['UNREAD'], show_progress=show_progress)
     
     def batch_mark_as_unread(self, *, message_ids: List[str], show_progress: bool = True) -> Dict[str, bool]:
         """

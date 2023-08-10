@@ -722,12 +722,18 @@ class Gmail:
         processed_add_labels = self._process_labels_for_api(add_labels) if add_labels else None
         processed_remove_labels = self._process_labels_for_api(remove_labels) if remove_labels else None
         
-        return self.client.batch_modify_labels(
+        result = self.client.batch_modify_labels(
             message_ids=message_ids,
             add_labels=processed_add_labels,
             remove_labels=processed_remove_labels,
             show_progress=show_progress
         )
+        
+        # Invalidate cache after label modifications to ensure fresh data
+        if self.cache_manager:
+            self.cache_manager.invalidate_cache()
+        
+        return result
     
 
 

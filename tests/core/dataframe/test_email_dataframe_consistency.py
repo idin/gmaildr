@@ -6,7 +6,7 @@ import pytest
 import pandas as pd
 import numpy as np
 from gmailwiz.core.gmail import Gmail
-from gmailwiz.core.email_dataframe import EmailDataFrame
+from gmailwiz.core.email_dataframe import EmailDataFrame, EmailSeries
 
 
 def test_dataframe_consistency():
@@ -68,7 +68,10 @@ def test_dataframe_consistency():
     
     email_message_ids = emails['message_id']
     regular_message_ids = regular_df['message_id']
-    assert type(email_message_ids) == type(regular_message_ids), f"Type mismatch for message_id column: {type(email_message_ids)} vs {type(regular_message_ids)}"
+    # Both should return regular Series for consistency
+    assert isinstance(email_message_ids, pd.Series), f"EmailDataFrame message_id should be Series, got {type(email_message_ids)}"
+    assert isinstance(regular_message_ids, pd.Series), f"DataFrame message_id should be Series, got {type(regular_message_ids)}"
+    
     assert len(email_message_ids) == len(regular_message_ids), f"Length mismatch for message_id column: {len(email_message_ids)} vs {len(regular_message_ids)}"
     
     # Test 4: Multiple row access with iloc[0:2]

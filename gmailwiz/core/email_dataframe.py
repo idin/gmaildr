@@ -17,6 +17,8 @@ class EmailSeries(pd.Series):
         """Initialize EmailSeries."""
         super().__init__(data=data, index=index, dtype=dtype, name=name, copy=copy)
     
+
+    
     def get_message_ids(self) -> List[str]:
         """Get message IDs as a list."""
         return self.tolist()
@@ -78,17 +80,20 @@ class EmailDataFrame(pd.DataFrame):
     
     def _constructor_sliced(self, *args, **kwargs):
         """Return the class to use for Series operations."""
-        # Check if we're slicing the message_id column specifically
-        # If so, return EmailSeries for email-specific operations
-        if len(args) > 0 and args[0] == 'message_id':
-            return EmailSeries
-        # Otherwise return regular Series
+        # Return the class itself, not an instance
         return pd.Series
     
     def _constructor_sliced_from_mgr(self, mgr, axes):
         """Return the class to use for Series operations from manager."""
         # Create a Series instance directly instead of returning the class
         return pd.Series._from_mgr(mgr, axes=axes)
+    
+    def iterrows(self):
+        """Override iterrows to avoid the __finalize__ issue."""
+        columns = self.columns
+        for k, v in zip(self.index, self.values):
+            s = pd.Series(v, index=columns, name=k)
+            yield k, s
     
     def __getitem__(self, key):
         """Override __getitem__ to return EmailSeries for message_id column."""
