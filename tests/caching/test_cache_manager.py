@@ -138,7 +138,7 @@ class TestEmailCacheManager:
         mock_gmail_client = Mock()
         mock_gmail_client.search_messages.return_value = ['msg1', 'msg2']
         
-        # Create proper mock email objects with all required attributes
+                # Create proper mock email objects with all required attributes
         mock_email1 = Mock()
         mock_email1.message_id = 'msg1'
         mock_email1.sender_email = 'test1@example.com'
@@ -157,7 +157,28 @@ class TestEmailCacheManager:
         mock_email1.has_attachments = False
         mock_email1.is_read = False
         mock_email1.is_important = False
-        
+        mock_email1.to_dict.return_value = {
+            'message_id': 'msg1',
+            'sender_email': 'test1@example.com',
+            'sender_name': 'Test User 1',
+            'subject': 'Test Subject 1',
+            'date': mock_email1.date_received,
+            'size_bytes': 1024,
+            'size_kb': 1.0,
+            'size_mb': 0.001,
+            'labels': ['INBOX', 'UNREAD'],
+            'thread_id': 'thread1',
+            'snippet': 'Test snippet 1',
+            'has_attachments': False,
+            'is_read': False,
+            'is_important': False,
+            'year': 2024,
+            'month': 1,
+            'day': 1,
+            'hour': 12,
+            'day_of_week': 'Monday'
+        }
+
         mock_email2 = Mock()
         mock_email2.message_id = 'msg2'
         mock_email2.sender_email = 'test2@example.com'
@@ -176,6 +197,27 @@ class TestEmailCacheManager:
         mock_email2.has_attachments = True
         mock_email2.is_read = True
         mock_email2.is_important = True
+        mock_email2.to_dict.return_value = {
+            'message_id': 'msg2',
+            'sender_email': 'test2@example.com',
+            'sender_name': 'Test User 2',
+            'subject': 'Test Subject 2',
+            'date': mock_email2.date_received,
+            'size_bytes': 2048,
+            'size_kb': 2.0,
+            'size_mb': 0.002,
+            'labels': ['INBOX'],
+            'thread_id': 'thread2',
+            'snippet': 'Test snippet 2',
+            'has_attachments': True,
+            'is_read': True,
+            'is_important': True,
+            'year': 2024,
+            'month': 1,
+            'day': 1,
+            'hour': 12,
+            'day_of_week': 'Monday'
+        }
         
         mock_gmail_client.get_messages_batch.return_value = [[mock_email1, mock_email2]]
         

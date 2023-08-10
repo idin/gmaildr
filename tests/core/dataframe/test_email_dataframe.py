@@ -32,19 +32,19 @@ def test_email_dataframe_with_gmail_client():
     mock_gmail = Gmail()  # Using real Gmail instance for testing
     data = {'message_id': ['msg1'], 'subject': ['Test']}
     
-    df = EmailDataFrame(data, gmail_client=mock_gmail)
-    assert df._gmail_client == mock_gmail
+    df = EmailDataFrame(data, gmail_instance=mock_gmail)
+    assert df._gmail_instance == mock_gmail
 
 
-def test_set_gmail_client():
+def test_set_gmail_instance():
     """Test setting Gmail client after creation."""
     mock_gmail = Gmail()
     data = {'message_id': ['msg1'], 'subject': ['Test']}
     
     df = EmailDataFrame(data)
-    result = df.set_gmail_client(mock_gmail)
+    result = df.set_gmail_instance(mock_gmail)
     
-    assert df._gmail_client == mock_gmail
+    assert df._gmail_instance == mock_gmail
     assert result is df  # Should return self for chaining
 
 
@@ -60,19 +60,18 @@ def test_get_message_ids():
 def test_get_message_ids_missing_column():
     """Test error when message_id column is missing."""
     data = {'subject': ['Test 1'], 'sender': ['sender@test.com']}
-    df = EmailDataFrame(data)
     
-    with pytest.raises(ValueError, match="DataFrame must contain 'message_id' column"):
-        df._get_message_ids()
+    with pytest.raises(KeyError, match="DataFrame must contain 'message_id' column"):
+        EmailDataFrame(data)
 
 
-def test_check_gmail_client_not_set():
+def test_check_gmail_instance_not_set():
     """Test error when Gmail client is not set."""
     data = {'message_id': ['msg1'], 'subject': ['Test']}
     df = EmailDataFrame(data)
     
-    with pytest.raises(ValueError, match="Gmail client not set"):
-        df._check_gmail_client()
+    with pytest.raises(ValueError, match="Gmail instance not set"):
+        df._check_gmail_instance()
 
 
 def test_filter_method():

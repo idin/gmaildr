@@ -896,7 +896,7 @@ class GmailClient:
         Returns:
             Dict[str, bool]: Dictionary mapping message_id to success status.
         """
-        return self.batch_modify_labels(message_ids, add_labels=['STARRED'], show_progress=show_progress)
+        return self.batch_modify_labels(message_ids=message_ids, add_labels=['STARRED'], show_progress=show_progress)
     
     def batch_unstar_emails(self, *, message_ids: List[str], show_progress: bool = True) -> Dict[str, bool]:
         """
@@ -909,7 +909,7 @@ class GmailClient:
         Returns:
             Dict[str, bool]: Dictionary mapping message_id to success status.
         """
-        return self.batch_modify_labels(message_ids, remove_labels=['STARRED'], show_progress=show_progress)
+        return self.batch_modify_labels(message_ids=message_ids, remove_labels=['STARRED'], show_progress=show_progress)
     
     def batch_move_to_trash(self, *, message_ids: List[str], show_progress: bool = True) -> Dict[str, bool]:
         """
@@ -922,7 +922,7 @@ class GmailClient:
         Returns:
             Dict[str, bool]: Dictionary mapping message_id to success status.
         """
-        return self.batch_modify_labels(message_ids, add_labels=['TRASH'], show_progress=show_progress)
+        return self.batch_modify_labels(message_ids=message_ids, add_labels=['TRASH'], show_progress=show_progress)
     
     def batch_move_to_inbox(self, *, message_ids: List[str], show_progress: bool = True) -> Dict[str, bool]:
         """
@@ -936,7 +936,7 @@ class GmailClient:
             Dict[str, bool]: Dictionary mapping message_id to success status.
         """
         return self.batch_modify_labels(
-            message_ids, 
+            message_ids=message_ids, 
             add_labels=['INBOX'],
             remove_labels=['TRASH', 'SPAM'],
             show_progress=show_progress
@@ -953,7 +953,7 @@ class GmailClient:
         Returns:
             Dict[str, bool]: Dictionary mapping message_id to success status.
         """
-        return self.batch_modify_labels(message_ids, remove_labels=['INBOX'], show_progress=show_progress)
+        return self.batch_modify_labels(message_ids=message_ids, remove_labels=['INBOX'], show_progress=show_progress)
     
     def get_labels(self) -> List[Dict[str, Any]]:
         """

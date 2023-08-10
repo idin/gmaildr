@@ -8,6 +8,11 @@ cache/
 vscode/
 .ipynb_checkpoints/
 
+# Debug and development files
+EMAIL_DATAFRAME_CHANGES_LOG.md
+tests/core/debug/
+*.debug.md
+
 
 # Python
 __pycache__/

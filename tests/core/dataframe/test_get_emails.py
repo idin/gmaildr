@@ -27,16 +27,16 @@ def test_email_dataframe_has_gmail_client():
     
     # Test that EmailDataFrame can be created with Gmail client
     data = {'message_id': ['msg1'], 'subject': ['Test']}
-    df = EmailDataFrame(data, gmail_client=gmail)
+    df = EmailDataFrame(data, gmail_instance=gmail)
     
-    assert df._gmail_client == gmail
+    assert df._gmail_instance == gmail
 
 
 def test_email_dataframe_operations():
     """Test that EmailDataFrame has the expected operations."""
     gmail = Gmail()
     data = {'message_id': ['msg1'], 'subject': ['Test']}
-    df = EmailDataFrame(data, gmail_client=gmail)
+    df = EmailDataFrame(data, gmail_instance=gmail)
     
     # Test that EmailDataFrame has the expected methods
     assert hasattr(df, 'move_to_archive')

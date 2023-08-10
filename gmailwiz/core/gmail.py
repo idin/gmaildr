@@ -234,13 +234,17 @@ class Gmail:
         message_ids = self.client.search_messages(query=query, max_results=max_emails)
         
         if not message_ids:
-            return pd.DataFrame()
+            from .email_dataframe import EmailDataFrame
+            return EmailDataFrame(gmail_instance=self)
         
         # Use cache manager if available, otherwise fall back to direct API calls
         if self.cache_manager:
             return self.cache_manager.get_emails_with_cache(
                 gmail_client=self.client,
+                gmail_instance=self,
                 days=days,
+                start_date=start_date,
+                end_date=end_date,
                 max_emails=max_emails,
                 include_text=include_text,
                 include_metrics=include_metrics,
@@ -552,8 +556,7 @@ class Gmail:
             data.append(row)
         
         from .email_dataframe import EmailDataFrame
-        df = EmailDataFrame(data)
-        df.set_gmail_client(self)
+        df = EmailDataFrame(data=data, gmail_instance=self)
         return df
     
     def _determine_folder(self, email) -> str:

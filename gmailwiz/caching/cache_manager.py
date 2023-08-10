@@ -6,7 +6,7 @@ cached email retrieval and storage.
 """
 
 import logging
-from typing import List, Dict, Any, Optional, Set, Literal
+from typing import List, Dict, Any, Optional, Set, Literal, Union
 from datetime import datetime, timedelta
 import pandas as pd
 
@@ -64,13 +64,23 @@ class EmailCacheManager:
     def get_emails_with_cache(
         self, *,
         gmail_client,
-        days: int = 30,
-        max_emails: Optional[int] = None,
-        include_text: bool = False,
-        include_metrics: bool = False,
-        use_batch: bool = True,
-        parallelize_text_fetch: bool = False,
-        **filters
+        gmail_instance,
+        days,
+        start_date,
+        end_date,
+        max_emails,
+        from_sender,
+        subject_contains,
+        subject_does_not_contain,
+        has_attachment,
+        is_unread,
+        is_important,
+        in_folder,
+        is_starred,
+        include_text,
+        include_metrics,
+        use_batch,
+        parallelize_text_fetch
     ) -> pd.DataFrame:
         """
         Get emails with intelligent caching.
@@ -98,7 +108,14 @@ class EmailCacheManager:
                 include_metrics=include_metrics,
                 use_batch=use_batch,
                 parallelize_text_fetch=parallelize_text_fetch,
-                **filters
+                from_sender=from_sender,
+                subject_contains=subject_contains,
+                subject_does_not_contain=subject_does_not_contain,
+                has_attachment=has_attachment,
+                is_unread=is_unread,
+                is_important=is_important,
+                in_folder=in_folder,
+                is_starred=is_starred
             )
         
         # Calculate date range
@@ -108,15 +125,16 @@ class EmailCacheManager:
         # Build query for fresh message IDs using shared utility
         from ..utils.query_builder import build_gmail_search_query
         query = build_gmail_search_query(
-            days=days,
-            from_sender=filters.get('from_sender'),
-            subject_contains=filters.get('subject_contains'),
-            subject_does_not_contain=filters.get('subject_does_not_contain'),
-            has_attachment=filters.get('has_attachment'),
-            is_unread=filters.get('is_unread'),
-            is_important=filters.get('is_important'),
-            in_folder=filters.get('in_folder'),
-            is_starred=filters.get('is_starred')
+            start_date=start_date,
+            end_date=end_date,
+            from_sender=from_sender,
+            subject_contains=subject_contains,
+            subject_does_not_contain=subject_does_not_contain,
+            has_attachment=has_attachment,
+            is_unread=is_unread,
+            is_important=is_important,
+            in_folder=in_folder,
+            is_starred=is_starred
         )
         
         # Get fresh message IDs from Gmail
@@ -158,8 +176,9 @@ class EmailCacheManager:
         all_emails = cache_result["cached_emails"] + fresh_emails
         
         # Convert to DataFrame
-        from ..core.gmail import Gmail
-        gmail_instance = Gmail()
+        if gmail_instance is None:
+            from ..core.gmail import Gmail
+            gmail_instance = Gmail()
         df = gmail_instance._emails_to_dataframe(emails=all_emails, include_text=include_text)
         
         # Apply max_emails limit to final result if specified
