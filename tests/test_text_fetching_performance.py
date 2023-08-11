@@ -17,9 +17,9 @@ def test_text_fetching_performance():
     # Test 1: Get emails without text (should be fast)
     print("📧 Getting emails without text...")
     df_no_text = gmail.get_emails(
-        days=1, 
-        use_batch=True, 
-        include_text=False, 
+        days=7,  # Try more days to ensure we get emails
+        use_batch=True,
+        include_text=False,
         include_metrics=False
     )
     no_text_time = time.time() - start_time
@@ -29,7 +29,7 @@ def test_text_fetching_performance():
     print("📧 Getting emails with text...")
     text_start_time = time.time()
     df_with_text = gmail.get_emails(
-        days=1, 
+        days=7,  # Try more days to ensure we get emails
         use_batch=True, 
         include_text=True, 
         include_metrics=False
@@ -41,7 +41,7 @@ def test_text_fetching_performance():
     print("📧 Getting emails with text and metrics...")
     metrics_start_time = time.time()
     df_with_metrics = gmail.get_emails(
-        days=1, 
+        days=7,  # Try more days to ensure we get emails
         use_batch=True, 
         include_text=True, 
         include_metrics=True

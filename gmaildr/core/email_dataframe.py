@@ -60,7 +60,7 @@ class EmailDataFrame(pd.DataFrame):
             # THIS COLUMN IS A MUST FOR THIS CLASS. WE SHOULD NOT CHANGE THIS IF STATEMENT.
             if 'message_id' not in self.columns:
                 raise KeyError("DataFrame must contain 'message_id' column")
-    
+
     @property
     def _constructor(self):
         """Return the class to use for DataFrame operations."""
@@ -78,9 +78,10 @@ class EmailDataFrame(pd.DataFrame):
         else:
             return df
     
-    def _constructor_sliced(self, *args, **kwargs):
+    @property
+    def _constructor_sliced(self):
         """Return the class to use for Series operations."""
-        # Return the class itself, not an instance
+        # Let pandas handle Series creation normally
         return pd.Series
     
     def _constructor_sliced_from_mgr(self, mgr, axes):
@@ -120,10 +121,7 @@ class EmailDataFrame(pd.DataFrame):
             obj = pd.Series(values, index=self.index, name=name)
         return obj
     
-    @property
-    def dtypes(self):
-        """Override dtypes to ensure it returns the correct type."""
-        return super().dtypes
+    # Remove dtypes override as it's causing issues with pandas internals
     
     # Removed __finalize__ method as it was causing issues with pandas internals
     # Metadata propagation is handled by _constructor_from_mgr instead
@@ -181,7 +179,7 @@ class EmailDataFrame(pd.DataFrame):
             return True
         
         return gmail_instance.move_to_trash(
-            message_id=message_ids, 
+            message_ids=message_ids, 
             show_progress=show_progress
         )
     
@@ -200,16 +198,10 @@ class EmailDataFrame(pd.DataFrame):
         if not message_ids:
             return True
         
-        # Note: move_to_inbox only accepts single message_id, so we need to handle multiple
-        if len(message_ids) == 1:
-            return gmail_instance.move_to_inbox(message_id=message_ids[0])
-        else:
-            # For multiple emails, we need to use modify_labels
-            return gmail_instance.modify_labels(
-                message_ids=message_ids,
-                add_labels=['INBOX'],
-                show_progress=show_progress
-            )
+        return gmail_instance.move_to_inbox(
+            message_ids=message_ids,
+            show_progress=show_progress
+        )
     
     def mark_as_read(self, show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
         """

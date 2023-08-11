@@ -25,7 +25,7 @@ class EmailSchemaManager:
         """
         self.schema_version = schema_version
         self.required_fields = [
-            'message_id', 'sender_email', 'subject', 'date_received',
+            'message_id', 'sender_email', 'subject', 'timestamp',
             'labels', 'size_bytes', 'has_attachments'
         ]
     

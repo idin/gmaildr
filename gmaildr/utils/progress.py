@@ -23,7 +23,8 @@ class EmailProgressTracker:
         self, *,
         total: int,
         description: str = "Processing emails",
-        use_batch_mode: bool = False
+        use_batch_mode: bool = False,
+        unit: str = "emails"
     ):
         """
         Initialize the progress tracker.
@@ -36,20 +37,20 @@ class EmailProgressTracker:
         self.total = total
         self.description = description
         self.use_batch_mode = use_batch_mode
+        self.unit = unit
         
         # Create the progress bar with nice styling
         emoji = "⚡" if use_batch_mode else "📧"
         mode_text = " (batch mode)" if use_batch_mode else ""
-        full_desc = f"{emoji} {description}{mode_text}"
+        full_desc = f"🩻 {emoji} {description}{mode_text}"
         
-        # Create a custom bar format with percentage inside the bar
-        percentage_format = "{percentage:3.0f}%"
+        # Handle case where total is 0 - show 0/0 instead of 1/1
         self.progress_bar = tqdm(
             total=total,
-            desc=full_desc,
+            desc="",  # Empty description since we're putting emoji in bar_format
             unit="email",
             colour="green",
-            bar_format="{bar}| {n_fmt}/{total_fmt} emails [{elapsed}<{remaining}] {postfix}"
+            bar_format=f"🩻 {{bar}}| {{n_fmt}}/{{total_fmt}} {unit} [{{elapsed}}<{{remaining}}] {{postfix}}"
         )
     
     def update(self, count: int = 1) -> None:
@@ -70,7 +71,7 @@ class EmailProgressTracker:
         """
         emoji = "⚡" if self.use_batch_mode else "📧"
         mode_text = " (batch mode)" if self.use_batch_mode else ""
-        full_desc = f"{emoji} {description}{mode_text}"
+        full_desc = f"🩻 {emoji} {description}{mode_text}"
         self.progress_bar.set_description(full_desc)
     
     def set_postfix(self, message: str) -> None:

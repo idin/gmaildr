@@ -22,6 +22,8 @@ from ..analysis.metrics_service import MetricsService
 
 logger = logging.getLogger(__name__)
 
+
+
 class EmailCacheManager:
     """
     Main cache management interface for email operations.
@@ -32,24 +34,26 @@ class EmailCacheManager:
     
     def __init__(
         self, *, 
-        cache_config: Optional[CacheConfig] = None, 
-        cache_dir: Optional[str] = None
+        cache_config: CacheConfig,
+        cache_dir: str,
+        verbose: bool
     ):
         """
         Initialize cache manager.
         
         Args:
-            cache_config: Cache configuration. Creates default if None.
-            cache_dir: Cache directory path. Creates CacheConfig with this directory if provided.
+            cache_config: Cache configuration.
+            cache_dir: Cache directory path.
+            verbose: Whether to show detailed cache and processing messages.
         """
-        if cache_dir and not cache_config:
-            self.config = CacheConfig(cache_dir=cache_dir)
-        else:
-            self.config = cache_config or CacheConfig()
+        self.config = cache_config
+        self.cache_dir = cache_dir
+        
+        self.verbose = verbose
         
         self.file_storage = EmailFileStorage(cache_config=self.config)
         self.schema_manager = EmailSchemaManager(schema_version=self.config.schema_version)
-        self.index_manager = EmailIndexManager(cache_config=self.config)
+        self.index_manager = EmailIndexManager(cache_config=self.config, verbose=verbose)
         
         # Build indexes on initialization
         if self.config.enable_cache:
@@ -60,6 +64,22 @@ class EmailCacheManager:
         self.cache_misses = 0
         self.cache_writes = 0
         self.cache_updates = 0
+    
+    def _log_with_verbosity(self, message: str, level: str = "info") -> None:
+        """
+        Log a message to file and optionally print to console if verbose.
+        
+        Args:
+            message: Message to log.
+            level: Log level ('info', 'warning', 'error', 'debug').
+        """
+        # Log the message to file only
+        log_method = getattr(logger, level.lower(), logger.info)
+        log_method(message)
+        
+        # Print to console if verbose
+        if self.verbose:
+            print(message)
     
     def get_emails_with_cache(
         self, *,
@@ -138,18 +158,20 @@ class EmailCacheManager:
         )
         
         # Get fresh message IDs from Gmail
+        self._log_with_verbosity("Searching Gmail API for emails...")
         fresh_message_ids = gmail_client.search_messages(
             query=query, max_results=max_emails
         )
-        logger.info(f"Found {len(fresh_message_ids)} fresh emails from Gmail")
+        self._log_with_verbosity(f"Found {len(fresh_message_ids)} fresh emails from Gmail")
         
         # Get cached message IDs in date range
+        self._log_with_verbosity("Checking cache for existing emails...")
         cached_message_ids = self.index_manager.get_cached_message_ids(start_date=start_date, end_date=end_date)
-        logger.info(f"Found {len(cached_message_ids)} cached emails in date range")
+        self._log_with_verbosity(f"Found {len(cached_message_ids)} cached emails in date range")
         
         # Determine which emails to fetch
         new_message_ids = set(fresh_message_ids) - cached_message_ids
-        logger.info(f"Need to fetch {len(new_message_ids)} new emails")
+        self._log_with_verbosity(f"Need to fetch {len(new_message_ids)} new emails")
         
         cache_result = self._load_cached_emails(
             message_ids=cached_message_ids, 
@@ -162,6 +184,7 @@ class EmailCacheManager:
         # Fetch fresh emails
         fresh_emails = []
         if emails_to_fetch:
+            self._log_with_verbosity(f"Starting to fetch {len(emails_to_fetch)} new emails...")
             # Track cache misses
             self._track_cache_miss()
             fresh_emails = self._fetch_new_emails(
@@ -171,9 +194,12 @@ class EmailCacheManager:
                 use_batch=use_batch, 
                 parallelize_text_fetch=parallelize_text_fetch
             )
+        else:
+            self._log_with_verbosity("No new emails to fetch - all data available in cache")
         
         # Merge cached and fresh emails
         all_emails = cache_result["cached_emails"] + fresh_emails
+        self._log_with_verbosity(f"Total emails processed: {len(all_emails)} ({len(cache_result['cached_emails'])} from cache, {len(fresh_emails)} fresh)")
         
         # Convert to DataFrame
         if gmail_instance is None:
@@ -184,7 +210,7 @@ class EmailCacheManager:
         # Apply max_emails limit to final result if specified
         if max_emails is not None and len(df) > max_emails:
             df = df.head(max_emails)
-            logger.info(f"Limited final result to {len(df)} emails to respect max_emails={max_emails}")
+            self._log_with_verbosity(f"Limited final result to {len(df)} emails to respect max_emails={max_emails}")
         
         # Add metrics if requested
         if include_metrics and include_text:
@@ -215,7 +241,8 @@ class EmailCacheManager:
         
         with EmailProgressTracker(
             total=len(message_ids),
-            description="Loading cached emails"
+            description="Loading cached emails",
+            unit="cached emails"
         ) as progress:
             for message_id in message_ids:
                 message_info = self.index_manager.get_message_info(message_id=message_id)
@@ -229,7 +256,7 @@ class EmailCacheManager:
                             email_data = self.schema_manager.upgrade_schema(email_data=email_data)
                         
                         # Check if all required fields are available
-                        required_fields = ['message_id', 'sender_email', 'subject', 'date_received', 'labels', 'size_bytes']
+                        required_fields = ['message_id', 'sender_email', 'subject', 'timestamp', 'labels', 'size_bytes']
                         if include_text:
                             required_fields.append('text_content')
                         
@@ -251,7 +278,7 @@ class EmailCacheManager:
                 
                 progress.update(1)
         
-        logger.info(f"Loaded {len(cached_emails)} cached emails, {len(skipped_message_ids)} need fresh data")
+        self._log_with_verbosity(f"Loaded {len(cached_emails)} cached emails, {len(skipped_message_ids)} need fresh data")
         
         # Track cache hits
         if len(cached_emails) > 0:
@@ -313,7 +340,8 @@ class EmailCacheManager:
         
         with EmailProgressTracker(
             total=len(emails),
-            description="Caching emails"
+            description="Caching emails",
+            unit="emails to cache"
         ) as progress:
             for email in emails:
                 # Convert to dictionary
@@ -323,7 +351,7 @@ class EmailCacheManager:
                 email_data = self.schema_manager._add_cache_metadata(email_data=email_data)
                 
                 # Save to file
-                date_str = email.date_received.strftime(format="%Y-%m-%d")
+                date_str = email.timestamp.strftime(format="%Y-%m-%d")
                 success = self.file_storage.save_email(email_data=email_data, message_id=email.message_id, date_str=date_str)
                 
                 if success:
@@ -349,11 +377,21 @@ class EmailCacheManager:
         """
         from ..models import EmailMessage
         
-        # Parse date
-        if isinstance(email_data['date_received'], str):
-            date_received = datetime.fromisoformat(email_data['date_received'].replace('Z', '+00:00'))
+        # Parse timestamp
+        if isinstance(email_data['timestamp'], str):
+            timestamp = datetime.fromisoformat(email_data['timestamp'].replace('Z', '+00:00'))
         else:
-            date_received = email_data['date_received']
+            timestamp = email_data['timestamp']
+        
+        # Parse sender_local_timestamp
+        if 'sender_local_timestamp' in email_data:
+            if isinstance(email_data['sender_local_timestamp'], str):
+                sender_local_timestamp = datetime.fromisoformat(email_data['sender_local_timestamp'].replace('Z', '+00:00'))
+            else:
+                sender_local_timestamp = email_data['sender_local_timestamp']
+        else:
+            # Fallback for old cached data that doesn't have sender_local_timestamp
+            sender_local_timestamp = timestamp
         
         # Parse labels
         labels = email_data.get('labels', [])
@@ -365,7 +403,8 @@ class EmailCacheManager:
             sender_email=email_data['sender_email'],
             sender_name=email_data.get('sender_name', ''),
             subject=email_data['subject'],
-            date_received=date_received,
+            timestamp=timestamp,
+            sender_local_timestamp=sender_local_timestamp,
             size_bytes=email_data['size_bytes'],
             labels=labels,
             thread_id=email_data.get('thread_id', ''),
@@ -391,7 +430,8 @@ class EmailCacheManager:
             'sender_email': email.sender_email,
             'sender_name': email.sender_name,
             'subject': email.subject,
-            'date_received': email.date_received.isoformat(),
+            'timestamp': email.timestamp.isoformat(),
+            'sender_local_timestamp': email.sender_local_timestamp.isoformat(),
             'size_bytes': email.size_bytes,
             'labels': email.labels,
             'thread_id': email.thread_id,
@@ -567,7 +607,7 @@ class EmailCacheManager:
             # Recreate directories
             self.config._ensure_cache_directories()
             
-            logger.info("Cache invalidated successfully")
+            self._log_with_verbosity("Cache invalidated successfully")
             return True
             
         except Exception as error:

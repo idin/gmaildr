@@ -5,7 +5,7 @@ This module provides functions to handle date range logic for Gmail search queri
 """
 
 from datetime import datetime, timedelta, date
-from typing import Optional, Union, Tuple, Dict, Literal
+from typing import Optional, Union, Tuple, Dict, Literal, TypedDict
 
 def parse_date(date_input: Union[datetime, str]) -> datetime:
     """Parse date input to datetime object."""
@@ -27,7 +27,7 @@ def parse_date_range(
     start_date: Optional[Union[datetime, str]] = None,
     end_date: Optional[Union[datetime, str]] = None,
     default_days: int = 30
-) -> Dict[Literal['start_date', 'end_date', 'days'], Union[datetime, int]]:
+) -> Dict[str, Union[datetime, int]]:
     """
     Parse date range parameters and return start and end dates.
     

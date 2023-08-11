@@ -6,11 +6,16 @@ Handles quick lookup indexes for efficient cache operations.
 
 import json
 import logging
+import fcntl
+import tempfile
+import shutil
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set
 from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
+
+
 
 class EmailIndexManager:
     """
@@ -19,16 +24,50 @@ class EmailIndexManager:
     Maintains indexes for message_id to file path mapping and date-based lookups.
     """
     
-    def __init__(self, cache_config):
+    def __init__(self, *, cache_config, verbose: bool):
         """
         Initialize index manager.
         
         Args:
             cache_config: CacheConfig instance.
+            verbose: Whether to show detailed cache and processing messages.
         """
         self.config = cache_config
+        self.verbose = verbose
         self.message_index_file = self.config.get_index_file_path("message_index")
         self.date_index_file = self.config.get_index_file_path("date_index")
+        self._file_locks = {}
+    
+    def _log_with_verbosity(self, message: str, level: str = "info") -> None:
+        """
+        Log a message to file and optionally print to console if verbose.
+        
+        Args:
+            message: Message to log.
+            level: Log level ('info', 'warning', 'error', 'debug').
+        """
+        # Log the message to file only
+        log_method = getattr(logger, level.lower(), logger.info)
+        log_method(message)
+        
+        # Print to console if verbose
+        if self.verbose:
+            print(message)
+    
+    def _get_file_lock(self, file_path: Path):
+        """
+        Get or create a file lock for the given file.
+        
+        Args:
+            file_path: Path to the file to lock.
+            
+        Returns:
+            File lock object.
+        """
+        lock_key = str(file_path)
+        if lock_key not in self._file_locks:
+            self._file_locks[lock_key] = {}
+        return self._file_locks[lock_key]
     
     def build_indexes(self) -> bool:
         """
@@ -38,7 +77,10 @@ class EmailIndexManager:
             True if successful, False otherwise.
         """
         try:
-            logger.info("Building email cache indexes...")
+            self._log_with_verbosity("Building email cache indexes...")
+            
+            # Clean up any existing lock files first
+            self._cleanup_lock_files()
             
             message_index = {}
             date_index = {}
@@ -64,12 +106,25 @@ class EmailIndexManager:
             self._save_index(index_file=self.message_index_file, index_data=message_index)
             self._save_index(index_file=self.date_index_file, index_data=date_index)
             
-            logger.info(f"Built indexes: {len(message_index)} messages across {len(date_index)} dates")
+            self._log_with_verbosity(f"Built indexes: {len(message_index)} messages across {len(date_index)} dates")
             return True
             
         except Exception as error:
-            logger.error(f"Failed to build indexes: {error}")
+            self._log_with_verbosity(f"Failed to build indexes: {error}", level="error")
             return False
+    
+    def _cleanup_lock_files(self) -> None:
+        """
+        Clean up any existing lock files that might be left over.
+        """
+        try:
+            for lock_file in self.config.metadata_dir.glob("*.lock"):
+                try:
+                    lock_file.unlink()
+                except Exception:
+                    pass
+        except Exception:
+            pass
     
     def get_cached_message_ids(self, start_date: datetime, end_date: datetime) -> Set[str]:
         """
@@ -91,7 +146,7 @@ class EmailIndexManager:
             current_date = start_date
             
             while current_date <= end_date:
-                date_str = current_date.strftime(format="%Y-%m-%d")
+                date_str = current_date.strftime("%Y-%m-%d")
                 if date_str in date_index:
                     cached_ids.update(date_index[date_str])
                 current_date += timedelta(days=1)
@@ -114,6 +169,8 @@ class EmailIndexManager:
         """
         try:
             message_index = self._load_index(self.message_index_file)
+            if message_index is None:
+                return False
             return message_id in message_index
             
         except Exception as error:
@@ -132,6 +189,8 @@ class EmailIndexManager:
         """
         try:
             message_index = self._load_index(self.message_index_file)
+            if message_index is None:
+                return None
             return message_index.get(message_id)
             
         except Exception as error:
@@ -250,28 +309,85 @@ class EmailIndexManager:
     
     def _load_index(self, index_file: Path) -> Optional[Dict[str, Any]]:
         """
-        Load an index file.
+        Load an index file with robust error handling.
         
         Args:
             index_file: Path to index file.
             
         Returns:
-            Index data if file exists, None otherwise.
+            Index data if file exists and is valid, None otherwise.
         """
+        if not index_file.exists():
+            return None
+        
+        # Use file locking to prevent concurrent access during read
+        lock_file = index_file.with_suffix('.lock')
+        
         try:
-            if not index_file.exists():
-                return None
-            
-            with open(index_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
+            # Try to acquire a shared lock for reading
+            with open(lock_file, 'w') as lock_f:
+                fcntl.flock(lock_f.fileno(), fcntl.LOCK_SH)
                 
+                try:
+                    # Read the entire file content first
+                    with open(index_file, 'r', encoding='utf-8') as f:
+                        content = f.read().strip()
+                    
+                    # Skip empty files
+                    if not content:
+                        logger.warning(f"Index file {index_file} is empty")
+                        return None
+                    
+                    # Try to parse JSON
+                    try:
+                        return json.loads(content)
+                    except json.JSONDecodeError as json_error:
+                        logger.error(f"JSON decode error in {index_file}: {json_error}")
+                        
+                        # Try to recover by reading only the first valid JSON object
+                        try:
+                            # Find the first complete JSON object
+                            brace_count = 0
+                            start_pos = content.find('{')
+                            if start_pos == -1:
+                                logger.error(f"No JSON object found in {index_file}")
+                                return None
+                            
+                            for i, char in enumerate(content[start_pos:], start_pos):
+                                if char == '{':
+                                    brace_count += 1
+                                elif char == '}':
+                                    brace_count -= 1
+                                    if brace_count == 0:
+                                        # Found complete JSON object
+                                        partial_content = content[start_pos:i+1]
+                                        return json.loads(partial_content)
+                            
+                            logger.error(f"Could not find complete JSON object in {index_file}")
+                            return None
+                            
+                        except Exception as recovery_error:
+                            logger.error(f"Failed to recover JSON from {index_file}: {recovery_error}")
+                            return None
+                        
+                finally:
+                    # Release the lock
+                    fcntl.flock(lock_f.fileno(), fcntl.LOCK_UN)
+                    
         except Exception as error:
             logger.error(f"Failed to load index {index_file}: {error}")
             return None
+        finally:
+            # Clean up lock file
+            if lock_file.exists():
+                try:
+                    lock_file.unlink()
+                except Exception:
+                    pass
     
     def _save_index(self, *, index_file: Path, index_data: Dict[str, Any]) -> bool:
         """
-        Save an index file.
+        Save an index file using atomic write to prevent corruption.
         
         Args:
             index_file: Path to index file.
@@ -280,11 +396,55 @@ class EmailIndexManager:
         Returns:
             True if successful, False otherwise.
         """
+        # Ensure the directory exists
+        index_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Use file locking to prevent concurrent access
+        lock_file = index_file.with_suffix('.lock')
+        
         try:
-            with open(index_file, 'w', encoding='utf-8') as f:
-                json.dump(index_data, f, indent=2, ensure_ascii=False)
-            return True
-            
+            # Create lock file and acquire exclusive lock
+            with open(lock_file, 'w') as lock_f:
+                fcntl.flock(lock_f.fileno(), fcntl.LOCK_EX)
+                
+                try:
+                    # Create temporary file in the same directory
+                    temp_file = tempfile.NamedTemporaryFile(
+                        mode='w',
+                        dir=index_file.parent,
+                        prefix=f"{index_file.stem}_",
+                        suffix='.tmp',
+                        delete=False,
+                        encoding='utf-8'
+                    )
+                    
+                    # Write data to temporary file
+                    json.dump(index_data, temp_file, indent=2, ensure_ascii=False)
+                    temp_file.close()
+                    
+                    # Atomically move the temporary file to the target location
+                    shutil.move(temp_file.name, index_file)
+                    
+                    return True
+                    
+                finally:
+                    # Release the lock
+                    fcntl.flock(lock_f.fileno(), fcntl.LOCK_UN)
+                    
         except Exception as error:
             logger.error(f"Failed to save index {index_file}: {error}")
+            # Clean up temporary file if it exists
+            temp_file_path = Path(temp_file.name) if 'temp_file' in locals() else None
+            if temp_file_path and temp_file_path.exists():
+                try:
+                    temp_file_path.unlink()
+                except Exception:
+                    pass
             return False
+        finally:
+            # Clean up lock file
+            if lock_file.exists():
+                try:
+                    lock_file.unlink()
+                except Exception:
+                    pass

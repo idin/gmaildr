@@ -35,7 +35,7 @@ Each email is stored as a JSON file containing:
   "sender_email": "sender@example.com",
   "sender_name": "Sender Name",
   "subject": "Email Subject",
-  "date_received": "2024-01-15T10:30:00+00:00",
+  "timestamp": "2024-01-15T10:30:00+00:00",
   "size_bytes": 2048,
   "labels": ["INBOX", "IMPORTANT"],
   "thread_id": "18c1234567890abc",

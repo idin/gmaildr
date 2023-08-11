@@ -11,6 +11,7 @@ import time
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any, Generator
 import logging
+from email.utils import parsedate_to_datetime as parse_email_timestamp
 
 from ..utils.progress import EmailProgressTracker
 
@@ -20,8 +21,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import BatchHttpRequest
-
 from ..models import EmailMessage
+
 
 # Gmail API scopes - read and modify access to Gmail
 SCOPES = [
@@ -247,7 +248,7 @@ class GmailClient:
             sender_email, sender_name = self._parse_sender(sender_raw)
             
             # Parse date
-            date_received = self._parse_date(headers.get('date'))
+            timestamp, sender_local_timestamp = self._parse_date(headers.get('date'))
             
             # Get message size
             size_bytes = int(message.get('sizeEstimate', 0))
@@ -267,7 +268,8 @@ class GmailClient:
                 sender_email=sender_email,
                 sender_name=sender_name,
                 subject=headers.get('subject', 'No Subject'),
-                date_received=date_received,
+                timestamp=timestamp,
+                sender_local_timestamp=sender_local_timestamp,
                 size_bytes=size_bytes,
                 labels=labels,
                 thread_id=message.get('threadId'),
@@ -334,19 +336,33 @@ class GmailClient:
             with EmailProgressTracker(
                 total=total_messages, 
                 description="Processing emails", 
-                use_batch_mode=False
+                use_batch_mode=False,
+                unit="emails from API"
             ) as tracker:
-                for index in range(0, len(message_ids), batch_size):
-                    batch_ids = message_ids[index:index + batch_size]
-                    batch_messages = []
-                    
-                    for message_id in batch_ids:
-                        message = self.get_message_details(message_id)
-                        if message:
-                            batch_messages.append(message)
-                        tracker.update(1)
-                    
-                    yield batch_messages
+                try:
+                    for index in range(0, len(message_ids), batch_size):
+                        batch_ids = message_ids[index:index + batch_size]
+                        batch_messages = []
+                        
+                        for message_id in batch_ids:
+                            message = self.get_message_details(message_id)
+                            if message:
+                                batch_messages.append(message)
+                            tracker.update(1)
+                        
+                        yield batch_messages
+                except KeyboardInterrupt:
+                    print("\n⚠️  Email processing interrupted by user. Returning partial results...")
+                    # Return any remaining emails as a final batch
+                    remaining_ids = message_ids[index + batch_size:]
+                    if remaining_ids:
+                        final_batch = []
+                        for message_id in remaining_ids:
+                            message = self.get_message_details(message_id)
+                            if message:
+                                final_batch.append(message)
+                        if final_batch:
+                            yield final_batch
         finally:
             # Restore original logging level
             logger.setLevel(original_level)
@@ -382,11 +398,13 @@ class GmailClient:
             with EmailProgressTracker(
                 total=total_messages, 
                 description="Processing emails", 
-                use_batch_mode=True
+                use_batch_mode=True,
+                unit="emails from API (batch)"
             ) as tracker:
                 
-                for index in range(0, len(message_ids), safe_batch_size):
-                    batch_ids = message_ids[index:index + safe_batch_size]
+                try:
+                    for index in range(0, len(message_ids), safe_batch_size):
+                        batch_ids = message_ids[index:index + safe_batch_size]
                     batch_messages = []
                     
                     # Retry logic for rate limiting
@@ -433,6 +451,7 @@ class GmailClient:
                                 continue
                             
                             # Process responses and convert to EmailMessage objects
+                            failed_conversions = 0
                             for message_id in batch_ids:
                                 response = batch_responses.get(message_id)
                                 if response:
@@ -441,6 +460,12 @@ class GmailClient:
                                     )
                                     if email_message:
                                         batch_messages.append(email_message)
+                                    else:
+                                        failed_conversions += 1
+                            
+                            # Report conversion failures if any
+                            if failed_conversions > 0:
+                                logger.warning(f"Failed to convert {failed_conversions} emails in this batch")
                             
                             # Update progress bar with attempted messages (to match total)
                             tracker.update(len(batch_ids))
@@ -472,6 +497,19 @@ class GmailClient:
                     # Add a small delay between batches to be nice to the API
                     if index + safe_batch_size < len(message_ids):
                         time.sleep(0.1)  # 100ms delay between batches
+                        
+                except KeyboardInterrupt:
+                    print("\n⚠️  Batch email processing interrupted by user. Returning partial results...")
+                    # Return any remaining emails as a final batch
+                    remaining_ids = message_ids[index + safe_batch_size:]
+                    if remaining_ids:
+                        final_batch = []
+                        for message_id in remaining_ids[:safe_batch_size]:  # Limit to one batch size
+                            message = self.get_message_details(message_id)
+                            if message:
+                                final_batch.append(message)
+                        if final_batch:
+                            yield final_batch
         finally:
             # Restore original logging level
             logger.setLevel(original_level)
@@ -503,7 +541,7 @@ class GmailClient:
             sender_email, sender_name = self._parse_sender(sender_raw)
             
             # Parse date
-            date_received = self._parse_date(headers.get('date'))
+            timestamp, sender_local_timestamp = self._parse_date(headers.get('date'))
             
             # Get message size
             size_bytes = int(message.get('sizeEstimate', 0))
@@ -523,7 +561,8 @@ class GmailClient:
                 sender_email=sender_email,
                 sender_name=sender_name,
                 subject=headers.get('subject', 'No Subject'),
-                date_received=date_received,
+                timestamp=timestamp,
+                sender_local_timestamp=sender_local_timestamp,
                 size_bytes=size_bytes,
                 labels=labels,
                 thread_id=message.get('threadId'),
@@ -535,7 +574,7 @@ class GmailClient:
             
         except Exception as error:
             logger.error(f"Failed to convert API response for {message_id}: {error}")
-            return None
+            raise RuntimeError(f"Failed to convert API response for {message_id}: {error}") from error
     
     def get_emails_from_date_range(
         self, *,
@@ -587,7 +626,7 @@ class GmailClient:
         email = sender_raw.strip(' <>"\'')
         return email, None
     
-    def _parse_date(self, date_str: Optional[str]) -> datetime:
+    def _parse_date(self, date_str: Optional[str]) -> tuple[datetime, datetime]:
         """
         Parse date string from email header.
         
@@ -595,17 +634,21 @@ class GmailClient:
             date_str (Optional[str]): Date string from email header.
             
         Returns:
-            datetime: Parsed datetime object.
+            tuple: (utc_timestamp, sender_local_timestamp) - both timezone-aware
         """
         if not date_str:
-            return datetime.now()
+            now = datetime.now()
+            return now, now
         
         try:
-            from email.utils import parsedate_to_datetime
-            return parsedate_to_datetime(date_str)
+            sender_local = parse_email_timestamp(date_str)
+            # Convert to UTC for consistency
+            utc_timestamp = sender_local.astimezone().replace(tzinfo=None)
+            return utc_timestamp, sender_local
         except (ValueError, TypeError):
-            logger.warning(f"Failed to parse date: {date_str}")
-            return datetime.now()
+            logger.debug(f"Failed to parse sender date: {date_str}, using current time for both timestamps")
+            now = datetime.now()
+            return now, now
     
     def _has_attachments(self, payload: Dict[str, Any]) -> bool:
         """

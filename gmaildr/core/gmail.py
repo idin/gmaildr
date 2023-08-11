@@ -33,18 +33,22 @@ class Gmail:
         report = gmail.analyze(days=90)
     """
     
-    def __init__(self, *, credentials_file: str = "credentials.json", enable_cache: bool = True):
+    def __init__(self, *, credentials_file: str = "credentials.json", enable_cache: bool = True, verbose: bool = False):
         """
         Initialize Gmail connection.
         
         Args:
             credentials_file (str): Path to Google OAuth2 credentials file.
             enable_cache (bool): Whether to enable email caching.
+            verbose (bool): Whether to show detailed cache and processing messages. Defaults to False.
         """
+        # Store verbose setting
+        self.verbose = verbose
+        
         # Set up configuration
         self.config_manager = ConfigManager()
         self.config = self.config_manager.get_config()
-        setup_logging(self.config)
+        setup_logging(self.config, verbose=verbose)
         
         # Initialize Gmail client
         self.client = GmailClient(
@@ -59,8 +63,13 @@ class Gmail:
         self.cache_manager = None
         if enable_cache:
             # CIRCULAR IMPORT: Cannot import at top level due to circular dependency
-            from ..caching import EmailCacheManager
-            self.cache_manager = EmailCacheManager()
+            from ..caching import EmailCacheManager, CacheConfig
+            cache_config = CacheConfig()
+            self.cache_manager = EmailCacheManager(
+                cache_config=cache_config,
+                cache_dir="cache",
+                verbose=verbose
+            )
         
         # Auto-authenticate
         self._authenticate()
@@ -69,6 +78,8 @@ class Gmail:
         """Authenticate with Gmail automatically."""
         if not self.client.authenticate():
             raise Exception("Gmail authentication failed. Check your credentials file.")
+    
+
     
     @staticmethod  
     def _build_search_query(
@@ -263,8 +274,14 @@ class Gmail:
             # Fall back to direct API calls (original implementation)
             # Get detailed email information
             emails = []
-            for batch in self.client.get_messages_batch(message_ids=message_ids, batch_size=25, use_api_batch=use_batch):
-                emails.extend(batch)
+            try:
+                for batch in self.client.get_messages_batch(message_ids=message_ids, batch_size=25, use_api_batch=use_batch):
+                    emails.extend(batch)
+            except KeyboardInterrupt:
+                print("\n⚠️  Email retrieval interrupted by user. Returning partial results...")
+                if not emails:
+                    from .email_dataframe import EmailDataFrame
+                    return EmailDataFrame(gmail_instance=self)
             
             # Validate include_metrics requires include_text
             if include_metrics and not include_text:
@@ -409,21 +426,28 @@ class Gmail:
         """
         if not parallelize:
             # Sequential processing for non-batch mode
-            for email in emails:
-                try:
-                    # Get full message details including body
-                    self.client._track_api_call(is_text_call=True)
-                    message = self.client.service.users().messages().get(
-                        userId='me',
-                        id=email.message_id,
-                        format='full'
-                    ).execute()
-                    
-                    # Extract text content
-                    email.text_content = self._extract_email_text(message)
-                    
-                except Exception as error:
-                    email.text_content = f"Error retrieving text: {error}"
+            try:
+                for email in emails:
+                    try:
+                        # Get full message details including body
+                        self.client._track_api_call(is_text_call=True)
+                        message = self.client.service.users().messages().get(
+                            userId='me',
+                            id=email.message_id,
+                            format='full'
+                        ).execute()
+                        
+                        # Extract text content
+                        email.text_content = self._extract_email_text(message)
+                        
+                    except Exception as error:
+                        email.text_content = f"Error retrieving text: {error}"
+            except KeyboardInterrupt:
+                print("\n⚠️  Text content retrieval interrupted by user. Returning emails with partial text content...")
+                # Mark remaining emails as having no text content
+                for email in emails:
+                    if not hasattr(email, 'text_content') or email.text_content is None:
+                        email.text_content = "Text retrieval interrupted"
         else:
             # Parallel processing for batch mode with rate limiting
             from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -465,27 +489,34 @@ class Gmail:
             # Use ThreadPoolExecutor with very limited workers to prevent kernel crashes
             max_workers = min(3, len(emails))  # Limit to 3 concurrent requests
             
-            with EmailProgressTracker(
-                total=len(emails),
-                description="Fetching email text"
-            ) as progress:
-                with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                    # Submit all tasks
-                    future_to_email = {
-                        executor.submit(fetch_email_text, email): email 
-                        for email in emails
-                    }
-                    
-                    # Process completed tasks
-                    for future in as_completed(future_to_email):
-                        try:
-                            future.result()  # This will raise any exceptions
-                            progress.update(1)
-                        except Exception as error:
-                            # Handle any unexpected errors
-                            email = future_to_email[future]
-                            email.text_content = f"Error retrieving text: {error}"
-                            progress.update(1)
+            try:
+                with EmailProgressTracker(
+                    total=len(emails),
+                    description="Fetching email text"
+                ) as progress:
+                    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                        # Submit all tasks
+                        future_to_email = {
+                            executor.submit(fetch_email_text, email): email 
+                            for email in emails
+                        }
+                        
+                        # Process completed tasks
+                        for future in as_completed(future_to_email):
+                            try:
+                                future.result()  # This will raise any exceptions
+                                progress.update(1)
+                            except Exception as error:
+                                # Handle any unexpected errors
+                                email = future_to_email[future]
+                                email.text_content = f"Error retrieving text: {error}"
+                                progress.update(1)
+            except KeyboardInterrupt:
+                print("\n⚠️  Parallel text content retrieval interrupted by user. Returning emails with partial text content...")
+                # Mark remaining emails as having no text content
+                for email in emails:
+                    if not hasattr(email, 'text_content') or email.text_content is None:
+                        email.text_content = "Text retrieval interrupted"
         
         return emails
     
@@ -631,16 +662,43 @@ class Gmail:
         """Remove star from an email."""
         return self.client.unstar_email(message_id)
     
-    def move_to_trash(self, message_id: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
-        """Move email(s) to trash."""
-        if isinstance(message_id, str):
-            return self.client.move_to_trash(message_id)
-        else:
-            return self.client.batch_move_to_trash(message_ids=message_id, show_progress=show_progress)
+    def move_to_trash(self, message_ids: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
+        """
+        Move emails to trash (add TRASH label).
+        
+        Args:
+            message_ids: Single message ID or list of message IDs
+            show_progress: Whether to show progress bar
+            
+        Returns:
+            bool or Dict[str, bool]: Success status
+        """
+        if isinstance(message_ids, str):
+            message_ids = [message_ids]
+        return self.modify_labels(
+            message_ids=message_ids,
+            add_labels=['TRASH'],
+            show_progress=show_progress
+        )
     
-    def move_to_inbox(self, message_id: str) -> bool:
-        """Move an email to inbox."""
-        return self.client.move_to_inbox(message_id)
+    def move_to_inbox(self, message_ids: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
+        """
+        Move emails to inbox (add INBOX label).
+        
+        Args:
+            message_ids: Single message ID or list of message IDs
+            show_progress: Whether to show progress bar
+            
+        Returns:
+            bool or Dict[str, bool]: Success status
+        """
+        if isinstance(message_ids, str):
+            message_ids = [message_ids]
+        return self.modify_labels(
+            message_ids=message_ids,
+            add_labels=['INBOX'],
+            show_progress=show_progress
+        )
     
     def archive_email(self, message_id: str) -> bool:
         """Archive an email."""

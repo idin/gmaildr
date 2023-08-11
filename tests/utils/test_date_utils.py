@@ -34,10 +34,10 @@ def test_parse_date_range_days_only():
     end_date = result['end_date']
     
     expected_end = datetime.now()
-    expected_start = expected_end - timedelta(days=7)
+    expected_start = expected_end - timedelta(days=6)  # days=7 means 7 days inclusive, so 6 days back
     
-    assert abs((end_date - expected_end).total_seconds()) < 1
-    assert abs((start_date - expected_start).total_seconds()) < 1
+    assert abs((end_date - expected_end).total_seconds()) < 1  # type: ignore
+    assert abs((start_date - expected_start).total_seconds()) < 1  # type: ignore
 
 
 def test_parse_date_range_start_date_only():

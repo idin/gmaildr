@@ -13,16 +13,25 @@ def test_text_content_is_retrieved():
     
     gmail = Gmail()
     
-    # Get emails with text content
+    # Get emails with text content - try increasing days until we find emails
+    days = 7
     df = gmail.get_emails(
-        days=1, 
+        days=days, 
         use_batch=True, 
         include_text=True, 
         include_metrics=False
     )
+    while df.empty and days <= 365:
+        days += 7
+        df = gmail.get_emails(
+            days=days, 
+            use_batch=True, 
+            include_text=True, 
+            include_metrics=False
+        )
     
     if df.empty:
-        pytest.skip("No emails found for testing")
+        pytest.fail("No emails found for testing")
     
     # Check that text_content column exists
     assert 'text_content' in df.columns, "text_content column should be present"
@@ -46,22 +55,31 @@ def test_text_content_has_meaningful_content():
     
     gmail = Gmail()
     
-    # Get emails with text content
+    # Get emails with text content - try increasing days until we find emails
+    days = 7
     df = gmail.get_emails(
-        days=1, 
+        days=days, 
         use_batch=True, 
         include_text=True, 
         include_metrics=False
     )
+    while df.empty and days <= 365:
+        days += 7
+        df = gmail.get_emails(
+            days=days, 
+            use_batch=True, 
+            include_text=True, 
+            include_metrics=False
+        )
     
     if df.empty:
-        pytest.skip("No emails found for testing")
+        pytest.fail(f"No emails found for testing even after searching {days} days")
     
     # Get first email with non-empty text content
     non_empty_emails = df[df['text_content'].notna() & (df['text_content'].str.len() > 0)]
     
     if len(non_empty_emails) == 0:
-        pytest.skip("No emails with text content found")
+        pytest.fail("No emails with text content found")
     
     sample_email = non_empty_emails.iloc[0]
     text_content = sample_email['text_content']
@@ -86,16 +104,25 @@ def test_text_content_with_metrics():
     
     gmail = Gmail()
     
-    # Get emails with text content and metrics
+    # Get emails with text content and metrics - try increasing days until we find emails
+    days = 7
     df = gmail.get_emails(
-        days=1, 
+        days=days, 
         use_batch=True, 
         include_text=True, 
         include_metrics=True
     )
+    while df.empty and days <= 365:
+        days += 7
+        df = gmail.get_emails(
+            days=days, 
+            use_batch=True, 
+            include_text=True, 
+            include_metrics=True
+        )
     
     if df.empty:
-        pytest.skip("No emails found for testing")
+        pytest.fail(f"No emails found for testing even after searching {days} days")
     
     # Check that text_content column exists
     assert 'text_content' in df.columns, "text_content column should be present"

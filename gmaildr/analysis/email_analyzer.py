@@ -8,7 +8,7 @@ including sender statistics, storage analysis, and trend identification.
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Generator
+from typing import List, Dict, Optional, Generator, Any
 import pandas as pd
 import numpy as np
 
@@ -69,7 +69,7 @@ class EmailAnalyzer:
         
         if not message_ids:
             logger.warning("No emails found in the specified date range")
-            return self._create_empty_report(start_date, end_date)
+            return self._create_empty_report(start_date=start_date, end_date=end_date)
         
         logger.info(f"Found {len(message_ids)} emails to analyze")
         
@@ -77,7 +77,7 @@ class EmailAnalyzer:
         all_emails = []
         total_processed = 0
         
-        for batch_emails in self.gmail_client.get_messages_batch(message_ids, batch_size):
+        for batch_emails in self.gmail_client.get_messages_batch(message_ids=message_ids, batch_size=batch_size):
             all_emails.extend(batch_emails)
             total_processed += len(batch_emails)
             logger.info(f"Processed {total_processed}/{len(message_ids)} emails")
@@ -86,7 +86,7 @@ class EmailAnalyzer:
         self.emails_cache = all_emails
         
         # Generate analysis report
-        return self._generate_analysis_report(all_emails, start_date, end_date)
+        return self._generate_analysis_report(emails=all_emails, start_date=start_date, end_date=end_date)
     
     def analyze_cached_emails(self) -> Optional[AnalysisReport]:
         """
@@ -102,11 +102,11 @@ class EmailAnalyzer:
         logger.info(f"Analyzing {len(self.emails_cache)} cached emails")
         
         # Determine date range from cached emails
-        dates = [email.date_received for email in self.emails_cache]
-        start_date = min(dates)
-        end_date = max(dates)
+        timestamps = [email.timestamp for email in self.emails_cache]
+        start_date = min(timestamps)
+        end_date = max(timestamps)
         
-        return self._generate_analysis_report(self.emails_cache, start_date, end_date)
+        return self._generate_analysis_report(emails=self.emails_cache, start_date=start_date, end_date=end_date)
     
     def get_sender_statistics(
         self,
@@ -161,9 +161,9 @@ class EmailAnalyzer:
                     labels_distribution[label] += 1
             
             # Get date range
-            dates = [email.date_received for email in sender_emails]
-            first_email_date = min(dates)
-            last_email_date = max(dates)
+            dates = [email.timestamp for email in sender_emails]
+            first_email_timestamp = min(dates)
+            last_email_timestamp = max(dates)
             
             # Create sender statistics object
             stats = SenderStatistics(
@@ -171,8 +171,8 @@ class EmailAnalyzer:
                 sender_name=sender_name,
                 total_emails=total_emails,
                 total_size_bytes=total_size,
-                first_email_date=first_email_date,
-                last_email_date=last_email_date,
+                first_email_timestamp=first_email_timestamp,
+                last_email_timestamp=last_email_timestamp,
                 average_size_bytes=average_size,
                 read_count=read_count,
                 unread_count=unread_count,
@@ -188,7 +188,7 @@ class EmailAnalyzer:
     def get_storage_analysis(
         self,
         emails: Optional[List[EmailMessage]] = None
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Analyze storage usage patterns.
         
@@ -251,7 +251,7 @@ class EmailAnalyzer:
                     'subject': email.subject,
                     'size_bytes': email.size_bytes,
                     'size_mb': email.size_bytes / (1024 * 1024),
-                    'date': email.date_received.isoformat()
+                    'timestamp': email.timestamp.isoformat()
                 }
                 for email in largest_emails
             ],
@@ -268,7 +268,7 @@ class EmailAnalyzer:
     def get_temporal_analysis(
         self,
         emails: Optional[List[EmailMessage]] = None
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Analyze email patterns over time.
         
@@ -288,7 +288,7 @@ class EmailAnalyzer:
         # Convert to pandas DataFrame for easier analysis
         df = pd.DataFrame([
             {
-                'date': email.date_received,
+                'date': email.timestamp,
                 'sender': email.sender_email,
                 'size_bytes': email.size_bytes,
                 'is_read': email.is_read,
@@ -298,23 +298,23 @@ class EmailAnalyzer:
         ])
         
         # Daily email counts
-        df['date_only'] = df['date'].dt.date
+        df['date_only'] = df['timestamp'].dt.date
         daily_counts = df.groupby('date_only').size()
         
         # Weekly email counts
-        df['week'] = df['date'].dt.to_period('W')
+        df['week'] = df['timestamp'].dt.to_period('W')
         weekly_counts = df.groupby('week').size()
         
         # Monthly email counts
-        df['month'] = df['date'].dt.to_period('M')
+        df['month'] = df['timestamp'].dt.to_period('M')
         monthly_counts = df.groupby('month').size()
         
         # Hourly patterns
-        df['hour'] = df['date'].dt.hour
+        df['hour'] = df['timestamp'].dt.hour
         hourly_patterns = df.groupby('hour').size()
         
         # Day of week patterns
-        df['day_of_week'] = df['date'].dt.day_name()
+        df['day_of_week'] = df['timestamp'].dt.day_name()
         day_patterns = df.groupby('day_of_week').size()
         
         return {
@@ -355,7 +355,7 @@ class EmailAnalyzer:
                 'sender_email': email.sender_email,
                 'sender_name': email.sender_name,
                 'subject': email.subject,
-                'date_received': email.date_received,
+                'timestamp': email.timestamp,
                 'size_bytes': email.size_bytes,
                 'size_kb': email.size_bytes / 1024,
                 'size_mb': email.size_bytes / (1024 * 1024),
@@ -365,11 +365,11 @@ class EmailAnalyzer:
                 'has_attachments': email.has_attachments,
                 'is_read': email.is_read,
                 'is_important': email.is_important,
-                'year': email.date_received.year,
-                'month': email.date_received.month,
-                'day': email.date_received.day,
-                'hour': email.date_received.hour,
-                'day_of_week': email.date_received.strftime('%A'),
+                'year': email.timestamp.year,
+                'month': email.timestamp.month,
+                'day': email.timestamp.day,
+                'hour': email.timestamp.hour,
+                'day_of_week': email.timestamp.strftime('%A'),
             })
         
         return pd.DataFrame(data)

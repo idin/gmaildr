@@ -249,15 +249,23 @@ class ConfigManager:
             return False
 
 
-def setup_logging(config: GmailConfig) -> None:
+def setup_logging(config: GmailConfig, verbose: bool = False) -> None:
     """
     Set up logging based on configuration.
     
     Args:
         config (GmailConfig): Configuration containing logging settings.
+        verbose (bool): Whether to show detailed messages in console. Defaults to False.
     """
+    # Set log level based on verbosity
+    if verbose:
+        log_level = getattr(logging, config.log_level.upper(), logging.INFO)
+    else:
+        log_level = logging.ERROR  # Only show errors when not verbose
+    
+    # Always log to file if specified
     logging_config = {
-        'level': getattr(logging, config.log_level.upper(), logging.INFO),
+        'level': log_level,
         'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         'datefmt': '%Y-%m-%d %H:%M:%S'
     }

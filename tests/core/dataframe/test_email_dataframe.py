@@ -16,7 +16,7 @@ def test_email_dataframe_creation():
         'message_id': ['msg1', 'msg2', 'msg3'],
         'subject': ['Test 1', 'Test 2', 'Test 3'],
         'sender': ['sender1@test.com', 'sender2@test.com', 'sender3@test.com'],
-        'date': [datetime.now()] * 3,
+        'timestamp': [datetime.now()] * 3,
         'is_read': [True, False, True]
     }
     

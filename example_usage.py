@@ -107,8 +107,8 @@ def main():
             if 'largest_emails' in storage_analysis:
                 largest = storage_analysis['largest_emails'][0] if storage_analysis['largest_emails'] else None
                 if largest:
-                    largest_mb = largest['size_mb']
-                    print(f"   Largest email: {largest_mb:.1f} MB from {largest['sender']}")
+                    largest_kb = largest['size_kb']
+                    print(f"   Largest email: {largest_kb:.1f} KB from {largest['sender']}")
         
         # Temporal analysis
         temporal_analysis = analyzer.get_temporal_analysis()

@@ -11,10 +11,14 @@ def test_move_to_archive_single_message():
     """Test move_to_archive with single message ID."""
     gmail = Gmail()
     
-    # Get a real email from inbox first
-    emails = gmail.get_emails(days=1, max_emails=1, in_folder='inbox')
+    # Get a real email from inbox first - try increasing days until we find emails
+    days = 7
+    emails = gmail.get_emails(days=days, max_emails=1, in_folder='inbox')
+    while emails.is_empty() and days <= 365:
+        days += 7
+        emails = gmail.get_emails(days=days, max_emails=1, in_folder='inbox')
     if emails.is_empty():
-        pytest.skip("No inbox emails available for testing")
+        pytest.fail(f"No inbox emails available for testing even after searching {days} days")
     
     message_id = emails.iloc[0]['message_id']
     
@@ -32,10 +36,14 @@ def test_move_to_archive_multiple_messages():
     """Test move_to_archive with multiple message IDs."""
     gmail = Gmail()
     
-    # Get real emails from inbox first
-    emails = gmail.get_emails(days=1, max_emails=2, in_folder='inbox')
+    # Get real emails from inbox first - try increasing days until we find enough emails
+    days = 7
+    emails = gmail.get_emails(days=days, max_emails=2, in_folder='inbox')
+    while len(emails) < 2 and days <= 365:
+        days += 7
+        emails = gmail.get_emails(days=days, max_emails=2, in_folder='inbox')
     if len(emails) < 2:
-        pytest.skip("Not enough inbox emails available for testing")
+        pytest.fail(f"Not enough inbox emails available for testing even after searching {days} days")
     
     message_ids = emails['message_id'].tolist()[:2]
     
@@ -54,10 +62,14 @@ def test_move_to_archive_with_progress():
     """Test move_to_archive with progress bar disabled."""
     gmail = Gmail()
     
-    # Get a real email from inbox first
-    emails = gmail.get_emails(days=1, max_emails=1, in_folder='inbox')
+    # Get a real email from inbox first - try increasing days until we find emails
+    days = 7
+    emails = gmail.get_emails(days=days, max_emails=1, in_folder='inbox')
+    while emails.is_empty() and days <= 365:
+        days += 7
+        emails = gmail.get_emails(days=days, max_emails=1, in_folder='inbox')
     if emails.is_empty():
-        pytest.skip("No inbox emails available for testing")
+        pytest.fail(f"No inbox emails available for testing even after searching {days} days")
     
     message_id = emails.iloc[0]['message_id']
     

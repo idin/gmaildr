@@ -25,8 +25,8 @@ def test_date_range_queries():
     assert df_default is not None, "Default query should return DataFrame"
     # Verify the dates are within the default range (30 days)
     if len(df_default) > 0:
-        last_date = df_default['date'].max()
-        first_date = df_default['date'].min()
+        last_date = df_default['timestamp'].max()
+        first_date = df_default['timestamp'].min()
         # Should be within the last 30 days
         assert (last_date.date() - first_date.date()).days <= 29, f"Date range should be within 30 days, got {(last_date.date() - first_date.date()).days + 1} days"
     
@@ -42,8 +42,8 @@ def test_date_range_queries():
     assert df_days is not None, "Days query should return DataFrame"
     # Verify the dates are within the last 2 days
     if len(df_days) > 0:
-        last_date = df_days['date'].max()
-        first_date = df_days['date'].min()
+        last_date = df_days['timestamp'].max()
+        first_date = df_days['timestamp'].min()
         # For days=2, we expect emails from the last 2 days (inclusive)
         assert (last_date.date() - first_date.date()).days <= 1, f"Date range should be within 2 days, got {(last_date.date() - first_date.date()).days + 1} days"
     # Test 3: start_date and end_date (inclusive range)
@@ -61,8 +61,8 @@ def test_date_range_queries():
     print(f"Found {len(df_range)} emails in date range")
     assert df_range is not None, "Date range query should return DataFrame"
     # dates should be within the specified range
-    last_date = df_range['date'].max()
-    first_date = df_range['date'].min()
+    last_date = df_range['timestamp'].max()
+    first_date = df_range['timestamp'].min()
     assert first_date.date() >= start_date.date(), "First date should be >= start_date"
     assert last_date.date() <= end_date.date(), "Last date should be <= end_date"
     
@@ -83,14 +83,14 @@ def test_date_range_queries():
     assert df_start_days is not None, "Start date + days query should return DataFrame"
     # Verify the dates are correct for start_date + days
     if len(df_start_days) > 0:
-        last_date = df_start_days['date'].max()
-        first_date = df_start_days['date'].min()
+        last_date = df_start_days['timestamp'].max()
+        first_date = df_start_days['timestamp'].min()
         expected_end_date = start_date + timedelta(days=1)  # 2 days inclusive means start_date + 1
         
         # Verify that most emails are in the expected range (allowing for timezone issues)
         emails_in_range = df_start_days[
-            (df_start_days['date'].apply(lambda x: x.date()) >= start_date.date()) & 
-            (df_start_days['date'].apply(lambda x: x.date()) <= expected_end_date.date())
+            (df_start_days['timestamp'].apply(lambda x: x.date()) >= start_date.date()) & 
+            (df_start_days['timestamp'].apply(lambda x: x.date()) <= expected_end_date.date())
         ]
         if len(df_start_days) > 0:
             percentage_in_range = len(emails_in_range) / len(df_start_days)

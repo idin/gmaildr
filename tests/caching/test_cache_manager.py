@@ -14,7 +14,7 @@ import tempfile
 import shutil
 from pathlib import Path
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
+# unit tests are not allowed
 
 from gmaildr.caching import EmailCacheManager
 from gmaildr.models import EmailMessage
@@ -33,11 +33,15 @@ class TestEmailCacheManager:
     @pytest.fixture
     def cache_manager(self, temp_cache_dir):
         """Create a cache manager instance for testing."""
-        return EmailCacheManager(cache_dir=temp_cache_dir)
+        from gmaildr.caching import CacheConfig
+        config = CacheConfig(cache_dir=temp_cache_dir)
+        return EmailCacheManager(cache_config=config, cache_dir=temp_cache_dir, verbose=False)
     
     def test_cache_manager_initialization(self, temp_cache_dir):
         """Test cache manager initialization."""
-        cache_manager = EmailCacheManager(cache_dir=temp_cache_dir)
+        from gmaildr.caching import CacheConfig
+        config = CacheConfig(cache_dir=temp_cache_dir)
+        cache_manager = EmailCacheManager(cache_config=config, cache_dir=temp_cache_dir, verbose=False)
         
         assert cache_manager.config.cache_dir == temp_cache_dir
         assert cache_manager.config.enable_cache is True
@@ -47,7 +51,9 @@ class TestEmailCacheManager:
     
     def test_cache_config_defaults(self, temp_cache_dir):
         """Test cache configuration defaults."""
-        cache_manager = EmailCacheManager(cache_dir=temp_cache_dir)
+        from gmaildr.caching import CacheConfig
+        config = CacheConfig(cache_dir=temp_cache_dir)
+        cache_manager = EmailCacheManager(cache_config=config, cache_dir=temp_cache_dir, verbose=False)
         config = cache_manager.config
         
         assert config.cache_dir == temp_cache_dir
@@ -104,7 +110,7 @@ class TestEmailCacheManager:
             'sender_email': 'test@example.com',
             'sender_name': 'Test User',
             'subject': 'Test Email',
-            'date_received': datetime.now().isoformat(),
+            'timestamp': datetime.now().isoformat(),
             'size_bytes': 1024,
             'labels': ['INBOX'],
             'thread_id': 'thread123',
@@ -144,12 +150,12 @@ class TestEmailCacheManager:
         mock_email1.sender_email = 'test1@example.com'
         mock_email1.sender_name = 'Test User 1'
         mock_email1.subject = 'Test Subject 1'
-        mock_email1.date_received = Mock()
-        mock_email1.date_received.year = 2024
-        mock_email1.date_received.month = 1
-        mock_email1.date_received.day = 1
-        mock_email1.date_received.hour = 12
-        mock_email1.date_received.strftime.return_value = 'Monday'
+        mock_email1.timestamp = Mock()
+        mock_email1.timestamp.year = 2024
+        mock_email1.timestamp.month = 1
+        mock_email1.timestamp.day = 1
+        mock_email1.timestamp.hour = 12
+        mock_email1.timestamp.strftime.return_value = 'Monday'
         mock_email1.size_bytes = 1024
         mock_email1.labels = ['INBOX', 'UNREAD']
         mock_email1.thread_id = 'thread1'
@@ -162,7 +168,7 @@ class TestEmailCacheManager:
             'sender_email': 'test1@example.com',
             'sender_name': 'Test User 1',
             'subject': 'Test Subject 1',
-            'date': mock_email1.date_received,
+            'timestamp': mock_email1.timestamp,
             'size_bytes': 1024,
             'size_kb': 1.0,
             'size_mb': 0.001,
@@ -184,12 +190,12 @@ class TestEmailCacheManager:
         mock_email2.sender_email = 'test2@example.com'
         mock_email2.sender_name = 'Test User 2'
         mock_email2.subject = 'Test Subject 2'
-        mock_email2.date_received = Mock()
-        mock_email2.date_received.year = 2024
-        mock_email2.date_received.month = 1
-        mock_email2.date_received.day = 1
-        mock_email2.date_received.hour = 12
-        mock_email2.date_received.strftime.return_value = 'Monday'
+        mock_email2.timestamp = Mock()
+        mock_email2.timestamp.year = 2024
+        mock_email2.timestamp.month = 1
+        mock_email2.timestamp.day = 1
+        mock_email2.timestamp.hour = 12
+        mock_email2.timestamp.strftime.return_value = 'Monday'
         mock_email2.size_bytes = 2048
         mock_email2.labels = ['INBOX']
         mock_email2.thread_id = 'thread2'
@@ -202,7 +208,7 @@ class TestEmailCacheManager:
             'sender_email': 'test2@example.com',
             'sender_name': 'Test User 2',
             'subject': 'Test Subject 2',
-            'date': mock_email2.date_received,
+            'timestamp': mock_email2.timestamp,
             'size_bytes': 2048,
             'size_kb': 2.0,
             'size_mb': 0.002,
@@ -224,9 +230,23 @@ class TestEmailCacheManager:
         # Test without text content (should not call _add_email_text)
         result = cache_manager.get_emails_with_cache(
             gmail_client=mock_gmail_client,
+            gmail_instance=None,
             days=7,
+            start_date=None,
+            end_date=None,
+            max_emails=100,
+            from_sender=None,
+            subject_contains=None,
+            subject_does_not_contain=None,
+            has_attachment=None,
+            is_unread=None,
+            is_important=None,
+            in_folder=None,
+            is_starred=None,
             include_text=False,
-            include_metrics=False
+            include_metrics=False,
+            use_batch=True,
+            parallelize_text_fetch=False
         )
         
         # Should return a DataFrame
@@ -348,12 +368,14 @@ class TestCacheIntegration:
     @pytest.fixture
     def sample_email(self):
         """Create a sample email for testing."""
+        now = datetime.now()
         return EmailMessage(
             message_id="test_message_123",
             sender_email="test@example.com",
             sender_name="Test User",
             subject="Test Email",
-            date_received=datetime.now(),
+            timestamp=now,
+            sender_local_timestamp=now,
             size_bytes=1024,
             labels=["INBOX", "UNREAD"],
             thread_id="test_thread_123",
@@ -365,7 +387,9 @@ class TestCacheIntegration:
     
     def test_email_caching_workflow(self, temp_cache_dir, sample_email):
         """Test the complete email caching workflow."""
-        cache_manager = EmailCacheManager(cache_dir=temp_cache_dir)
+        from gmaildr.caching import CacheConfig
+        config = CacheConfig(cache_dir=temp_cache_dir)
+        cache_manager = EmailCacheManager(cache_config=config, cache_dir=temp_cache_dir, verbose=False)
         
         # Convert email to dict
         email_dict = {
@@ -373,7 +397,7 @@ class TestCacheIntegration:
             'sender_email': sample_email.sender_email,
             'sender_name': sample_email.sender_name,
             'subject': sample_email.subject,
-            'date_received': sample_email.date_received.isoformat(),
+            'timestamp': sample_email.timestamp.isoformat(),
             'size_bytes': sample_email.size_bytes,
             'labels': sample_email.labels,
             'thread_id': sample_email.thread_id,
@@ -384,7 +408,7 @@ class TestCacheIntegration:
         }
         
         # Test email storage
-        date_str = sample_email.date_received.strftime('%Y-%m-%d')
+        date_str = sample_email.timestamp.strftime('%Y-%m-%d')
         success = cache_manager.file_storage.save_email(
             email_data=email_dict,
             message_id=sample_email.message_id,
@@ -418,17 +442,21 @@ class TestCacheIntegration:
     
     def test_cache_with_multiple_emails(self, temp_cache_dir):
         """Test caching multiple emails."""
-        cache_manager = EmailCacheManager(cache_dir=temp_cache_dir)
+        from gmaildr.caching import CacheConfig
+        config = CacheConfig(cache_dir=temp_cache_dir)
+        cache_manager = EmailCacheManager(cache_config=config, cache_dir=temp_cache_dir, verbose=False)
         
         # Create multiple test emails
         emails = []
         for i in range(3):
+            now = datetime.now() - timedelta(days=i)
             email = EmailMessage(
                 message_id=f"test_message_{i}",
                 sender_email=f"test{i}@example.com",
                 sender_name=f"Test User {i}",
                 subject=f"Test Email {i}",
-                date_received=datetime.now() - timedelta(days=i),
+                timestamp=now,
+                sender_local_timestamp=now,
                 size_bytes=1024 * (i + 1),
                 labels=["INBOX"],
                 thread_id=f"test_thread_{i}",
@@ -446,7 +474,7 @@ class TestCacheIntegration:
                 'sender_email': email.sender_email,
                 'sender_name': email.sender_name,
                 'subject': email.subject,
-                'date_received': email.date_received.isoformat(),
+                'timestamp': email.timestamp.isoformat(),
                 'size_bytes': email.size_bytes,
                 'labels': email.labels,
                 'thread_id': email.thread_id,
@@ -456,7 +484,7 @@ class TestCacheIntegration:
                 'is_important': email.is_important
             }
             
-            date_str = email.date_received.strftime('%Y-%m-%d')
+            date_str = email.timestamp.strftime('%Y-%m-%d')
             success = cache_manager.file_storage.save_email(
                 email_data=email_dict,
                 message_id=email.message_id,

@@ -1,14 +1,35 @@
 """
-Data models for Gmail Cleaner package.
+Data models for GmailDr.
 
-This module contains dataclasses and models used throughout the package
-for representing emails, statistics, and analysis results.
+This module contains the core data structures used throughout the application.
 """
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Any, Optional, Set
 import json
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class Sender:
+    """
+    Represents an email sender.
+    """
+    
+    address: str
+    name: Optional[str] = None
+    domain: Optional[str] = None
+    
+    def __post_init__(self):
+        """Validate address and extract domain if not provided."""
+        if self.address.count('@') != 1:
+            raise ValueError(f"Email address must contain exactly one @ symbol: {self.address}")
+        
+        if self.domain is None and '@' in self.address:
+            self.domain = self.address.split('@')[-1]
 
 
 @dataclass
@@ -24,7 +45,8 @@ class EmailMessage:
     sender_email: str
     sender_name: Optional[str]
     subject: str
-    date_received: datetime
+    timestamp: datetime
+    sender_local_timestamp: datetime
     size_bytes: int
     labels: List[str] = field(default_factory=list)
     thread_id: Optional[str] = None
@@ -49,21 +71,21 @@ class EmailMessage:
             'sender_email': self.sender_email,
             'sender_name': self.sender_name,
             'subject': self.subject,
-            'date': self.date_received,
+            'timestamp': self.timestamp,
+            'sender_local_timestamp': self.sender_local_timestamp,
             'size_bytes': self.size_bytes,
             'size_kb': self.size_bytes / 1024,
-            'size_mb': self.size_bytes / (1024 * 1024),
             'labels': self.labels,
             'thread_id': self.thread_id,
             'snippet': self.snippet,
             'has_attachments': self.has_attachments,
             'is_read': self.is_read,
             'is_important': self.is_important,
-            'year': self.date_received.year,
-            'month': self.date_received.month,
-            'day': self.date_received.day,
-            'hour': self.date_received.hour,
-            'day_of_week': self.date_received.strftime('%A'),
+            'year': self.timestamp.year,
+            'month': self.timestamp.month,
+            'day': self.timestamp.day,
+            'hour': self.timestamp.hour,
+            'day_of_week': self.timestamp.strftime('%A'),
         }
         
         if include_text and self.text_content is not None:
@@ -84,8 +106,8 @@ class SenderStatistics:
     sender_name: Optional[str]
     total_emails: int
     total_size_bytes: int
-    first_email_date: datetime
-    last_email_date: datetime
+    first_email_timestamp: datetime
+    last_email_timestamp: datetime
     average_size_bytes: float
     read_count: int
     unread_count: int
@@ -118,8 +140,8 @@ class SenderStatistics:
             "sender_name": self.sender_name,
             "total_emails": self.total_emails,
             "total_size_bytes": self.total_size_bytes,
-            "first_email_date": self.first_email_date.isoformat(),
-            "last_email_date": self.last_email_date.isoformat(),
+            "first_email_timestamp": self.first_email_timestamp.isoformat(),
+            "last_email_timestamp": self.last_email_timestamp.isoformat(),
             "average_size_bytes": self.average_size_bytes,
             "read_count": self.read_count,
             "unread_count": self.unread_count,
@@ -224,3 +246,4 @@ class AnalysisReport:
         """
         with open(file_path, 'w', encoding='utf-8') as file_handle:
             json.dump(self.to_dict(), file_handle, indent=2, ensure_ascii=False)
+

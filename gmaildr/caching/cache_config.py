@@ -4,7 +4,7 @@ Cache configuration and settings for email caching.
 
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 class CacheConfig:
     """
@@ -15,7 +15,7 @@ class CacheConfig:
     
     def __init__(
         self, *,
-        cache_dir: Optional[str] = None,
+        cache_dir: Optional[Union[str, Path]] = None,
         max_cache_age_days: int = 30,
         schema_version: str = "1.0",
         enable_cache: bool = True

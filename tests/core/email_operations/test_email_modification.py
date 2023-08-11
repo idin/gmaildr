@@ -204,7 +204,7 @@ def test_batch_modification():
     # Retrieve and verify batch changes
     print("\n🔍 Verifying batch changes...")
     batch_verify_start = time.time()
-    updated_df = gmail.get_emails(days=1, use_batch=True, include_text=False, include_metrics=False)
+    updated_df = gmail.get_emails(days=7, use_batch=True, include_text=False, include_metrics=False)
     batch_verify_time = time.time() - batch_verify_start
     print(f"   ⏱️  Batch verification: {batch_verify_time:.2f}s")
     

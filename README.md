@@ -1,4 +1,4 @@
-# Gmail Doctor 🫀
+# Gmail Doctor 🩻
 
 A powerful Gmail analysis, management, and automation wizard. Connect to Gmail and run comprehensive analysis on your email data. Generate detailed statistics about email senders, storage usage, and email patterns to better understand and manage your Gmail inbox.
 
@@ -90,7 +90,7 @@ work_emails = gmail.get_emails(
 work_emails.add_label(label_id)
 
 # Or add multiple labels
-work_emails.add_labels(['WORK', 'URGENT'])
+work_emails.add_label(['WORK', 'URGENT'])
 
 # Remove labels
 work_emails.remove_label('SPAM')

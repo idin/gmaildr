@@ -126,17 +126,17 @@ def test_dataframe_consistency():
     assert isinstance(regular_sample, pd.DataFrame), f"DataFrame sample should return DataFrame, got {type(regular_sample)}"
     assert email_sample.shape == regular_sample.shape, f"Shape mismatch for sample: {email_sample.shape} vs {regular_sample.shape}"
     
-    # Test 9: Groupby operations (SKIPPED - pandas compatibility issue)
-    print("\n=== Testing groupby (SKIPPED) ===")
+    # Test 9: Groupby operations
+    print("\n=== Testing groupby ===")
     
-    # TODO: Fix groupby compatibility issue
-    # email_grouped = emails.groupby('sender_email').size()
-    # regular_grouped = regular_df.groupby('sender_email').size()
+    # Test groupby compatibility
+    email_grouped = emails.groupby('sender_email').size()
+    regular_grouped = regular_df.groupby('sender_email').size()
     # Both should return pandas.Series for groupby().size() operations
-    # assert isinstance(email_grouped, pd.Series), f"EmailDataFrame groupby().size() should return pandas.Series, got {type(email_grouped)}"
-    # assert isinstance(regular_grouped, pd.Series), f"DataFrame groupby().size() should return pandas.Series, got {type(regular_grouped)}"
-    # assert len(email_grouped) == len(regular_grouped), f"Length mismatch for grouped: {len(email_grouped)} vs {len(regular_grouped)}"
-    print("Groupby test skipped due to pandas compatibility issue")
+    assert isinstance(email_grouped, pd.Series), f"EmailDataFrame groupby().size() should return pandas.Series, got {type(email_grouped)}"
+    assert isinstance(regular_grouped, pd.Series), f"DataFrame groupby().size() should return pandas.Series, got {type(regular_grouped)}"
+    assert len(email_grouped) == len(regular_grouped), f"Length mismatch for grouped: {len(email_grouped)} vs {len(regular_grouped)}"
+    print("Groupby test completed successfully")
     
     # Test 10: Value counts
     print("\n=== Testing value_counts ===")
