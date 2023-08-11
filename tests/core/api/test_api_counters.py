@@ -8,8 +8,8 @@ import pytest
 from unittest.mock import Mock, patch
 from datetime import datetime
 
-from gmailwiz.core.gmail_client import GmailClient
-from gmailwiz.core.gmail import Gmail
+from gmaildr.core.gmail_client import GmailClient
+from gmaildr.core.gmail import Gmail
 
 
 class TestApiCounters:
@@ -83,7 +83,7 @@ class TestCacheCounters:
     @pytest.fixture
     def cache_manager(self, temp_cache_dir):
         """Create a cache manager instance for testing."""
-        from gmailwiz.caching import EmailCacheManager
+        from gmaildr.caching import EmailCacheManager
         return EmailCacheManager(cache_dir=temp_cache_dir)
     
     def test_initial_cache_stats(self, cache_manager):
@@ -196,8 +196,8 @@ class TestGmailClassCounters:
 
 def test_api_counters_import():
     """Test that API counters can be imported and used."""
-    from gmailwiz.core.gmail_client import GmailClient
-    from gmailwiz.core.gmail import Gmail
+    from gmaildr.core.gmail_client import GmailClient
+    from gmaildr.core.gmail import Gmail
     
     client = GmailClient()
     gmail = Gmail()

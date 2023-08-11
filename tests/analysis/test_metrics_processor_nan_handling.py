@@ -8,7 +8,7 @@ causing TypeError when using 'in' operator.
 import pandas as pd
 import pytest
 import numpy as np
-from gmailwiz.analysis.metrics_processor import add_content_metrics_to_dataframe
+from gmaildr.analysis.metrics_processor import add_content_metrics_to_dataframe
 
 
 def test_handle_nan_text_content():

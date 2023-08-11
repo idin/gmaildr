@@ -3,7 +3,7 @@ Debug test to understand why image detection is failing.
 """
 
 import re
-from gmailwiz import Gmail
+from gmaildr import Gmail
 
 
 def test_debug_image_detection():
@@ -158,7 +158,7 @@ def test_debug_message_structure():
                     print(f"       Has data: No")
         
         # Try to extract text manually
-        from gmailwiz.core.gmail import Gmail as GmailClass
+        from gmaildr.core.gmail import Gmail as GmailClass
         extracted_text = GmailClass._extract_email_text(message)
         print(f"   Extracted text length: {len(extracted_text)}")
         print(f"   Text preview: {extracted_text[:200]}...")

@@ -2,7 +2,7 @@
 Tests for the fixed pattern matching function.
 """
 
-from gmailwiz.utils import count_patterns
+from gmaildr.utils import count_patterns
 
 
 def test_count_pattern_simple():

@@ -5,7 +5,7 @@ This test ensures that the Gmail client can fetch emails without encountering
 the TypeError that was caused by incorrect method call arguments.
 """
 
-from gmailwiz import Gmail
+from gmaildr import Gmail
 
 
 def test_gmail_client_fetch_emails():

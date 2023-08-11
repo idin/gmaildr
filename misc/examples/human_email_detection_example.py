@@ -9,8 +9,8 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from gmailwiz import Gmail
-from gmailwiz.analysis.human_email_detector import detect_human_emails, get_human_sender_summary
+from gmaildr import Gmail
+from gmaildr.analysis.human_email_detector import detect_human_emails, get_human_sender_summary
 
 
 def main():

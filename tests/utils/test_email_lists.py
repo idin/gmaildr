@@ -10,7 +10,7 @@ import tempfile
 import shutil
 from pathlib import Path
 
-from gmailwiz.utils import EmailListManager
+from gmaildr.utils import EmailListManager
 
 
 class TestEmailListManager:
@@ -232,7 +232,7 @@ class TestEmailListManager:
 
 def test_email_list_manager_import():
     """Test that EmailListManager can be imported and used."""
-    from gmailwiz.utils import EmailListManager
+    from gmaildr.utils import EmailListManager
     
     # Test that class can be instantiated
     manager = EmailListManager()

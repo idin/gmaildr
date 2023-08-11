@@ -4,7 +4,7 @@ Tests for remove_label functionality.
 
 import pytest
 
-from gmailwiz.core.gmail import Gmail
+from gmaildr.core.gmail import Gmail
 
 
 def test_remove_label_single_string():

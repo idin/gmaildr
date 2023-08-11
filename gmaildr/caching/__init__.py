@@ -1,5 +1,5 @@
 """
-Cache module for GmailWiz.
+Cache module for GmailDr.
 
 This module contains caching functionality for email data.
 """

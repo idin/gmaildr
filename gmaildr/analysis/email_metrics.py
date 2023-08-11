@@ -8,7 +8,7 @@ metrics that help distinguish between personal and automated emails.
 import re
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
-from gmailwiz.utils import match_patterns
+from gmaildr.utils import match_patterns
 
 
 @dataclass

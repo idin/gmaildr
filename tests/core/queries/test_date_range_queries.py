@@ -6,7 +6,7 @@ with all allowed parameter combinations.
 """
 
 from datetime import datetime, timedelta
-from gmailwiz import Gmail
+from gmaildr import Gmail
 import pytest
 
 
@@ -220,7 +220,7 @@ def test_date_range_inclusivity():
 
 def test_gmail_search_query_builder():
     """Test the query builder directly."""
-    from gmailwiz.utils.query_builder import build_gmail_search_query
+    from gmaildr.utils.query_builder import build_gmail_search_query
     from datetime import datetime
     
     # Test date range query building

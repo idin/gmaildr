@@ -5,8 +5,8 @@ Tests for get_emails returning EmailDataFrame.
 import pytest
 from datetime import datetime
 
-from gmailwiz.core.gmail import Gmail
-from gmailwiz.core.email_dataframe import EmailDataFrame
+from gmaildr.core.gmail import Gmail
+from gmaildr.core.email_dataframe import EmailDataFrame
 
 
 def test_get_emails_returns_email_dataframe():

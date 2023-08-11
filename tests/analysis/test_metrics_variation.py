@@ -7,7 +7,7 @@ rather than being all zeros or identical values, which would indicate a problem.
 
 import pandas as pd
 import numpy as np
-from gmailwiz import Gmail
+from gmaildr import Gmail
 
 
 def test_metrics_have_variation():

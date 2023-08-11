@@ -5,7 +5,7 @@ This test verifies that when max_emails is specified, it's not overridden
 by other parameters like days.
 """
 
-from gmailwiz import Gmail
+from gmaildr import Gmail
 
 
 def test_max_emails_respected_in_get_trash_emails():

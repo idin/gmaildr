@@ -1,5 +1,5 @@
 """
-Analysis module for GmailWiz.
+Analysis module for GmailDr.
 
 This module contains email analysis and metrics functionality.
 """

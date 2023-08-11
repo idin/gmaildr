@@ -1,5 +1,5 @@
 """
-Core module for GmailWiz.
+Core module for GmailDr.
 
 This module contains the core functionality for Gmail operations.
 """

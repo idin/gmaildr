@@ -6,8 +6,8 @@ import pytest
 import pandas as pd
 from datetime import datetime
 
-from gmailwiz.core.gmail import Gmail
-from gmailwiz.core.email_dataframe import EmailDataFrame
+from gmaildr.core.gmail import Gmail
+from gmaildr.core.email_dataframe import EmailDataFrame
 
 
 def test_email_dataframe_creation():

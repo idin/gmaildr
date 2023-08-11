@@ -1,4 +1,4 @@
-# GmailWiz API Improvements
+# GmailDr API Improvements
 
 ## Current Issues
 

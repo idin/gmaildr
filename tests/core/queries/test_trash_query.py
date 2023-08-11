@@ -5,7 +5,7 @@ This test verifies that the search query for trash emails is built correctly
 and returns the expected Gmail search syntax.
 """
 
-from gmailwiz import Gmail
+from gmaildr import Gmail
 
 
 def test_trash_search_query():

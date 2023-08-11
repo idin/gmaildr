@@ -6,7 +6,7 @@ across different emails and is not always zero.
 """
 
 import pandas as pd
-from gmailwiz.analysis.metrics_processor import add_content_metrics_to_dataframe
+from gmaildr.analysis.metrics_processor import add_content_metrics_to_dataframe
 
 
 def test_caps_ratio_not_zero_for_all_emails():

@@ -2,7 +2,7 @@
 Tests for the match_patterns function.
 """
 
-from gmailwiz.utils import match_patterns
+from gmaildr.utils import match_patterns
 
 
 def test_match_pattern_simple():

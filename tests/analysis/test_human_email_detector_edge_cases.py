@@ -7,7 +7,7 @@ and doesn't crash on invalid inputs.
 
 import unittest
 import pandas as pd
-from gmailwiz.analysis.human_email_detector import detect_human_emails, HumanEmailDetector
+from gmaildr.analysis.human_email_detector import detect_human_emails, HumanEmailDetector
 
 
 class TestHumanEmailDetectorEdgeCases(unittest.TestCase):

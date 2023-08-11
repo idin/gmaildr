@@ -1,4 +1,4 @@
-# GmailWiz
+# GmailDr
 
 A powerful Gmail analysis, management, and automation wizard. Connect to Gmail and run comprehensive analysis on your email data. Generate detailed statistics about email senders, storage usage, and email patterns to better understand and manage your Gmail inbox.
 
@@ -17,7 +17,7 @@ A powerful Gmail analysis, management, and automation wizard. Connect to Gmail a
 
 ### 📅 Date Range Queries
 ```python
-from gmailwiz import Gmail
+from gmaildr import Gmail
 from datetime import datetime, timedelta
 
 gmail = Gmail()
@@ -131,7 +131,7 @@ pip install -e .
 ### Using pip (when published)
 
 ```bash
-pip install gmailwiz
+pip install gmaildr
 ```
 
 ## Quick Start
@@ -147,20 +147,20 @@ pip install gmailwiz
 ### 2. Configure Gmail Cleaner
 
 ```bash
-gmailwiz setup --credentials-file credentials.json
+gmaildr setup --credentials-file credentials.json
 ```
 
 ### 3. Analyze Your Gmail
 
 ```bash
 # Analyze last 30 days
-gmailwiz analyze
+gmaildr analyze
 
 # Analyze last 7 days with max 500 emails
-gmailwiz analyze --days 7 --max-emails 500
+gmaildr analyze --days 7 --max-emails 500
 
 # Export to Excel format
-gmailwiz analyze --format excel --output my_gmail_analysis.xlsx
+gmaildr analyze --format excel --output my_gmail_analysis.xlsx
 ```
 
 ## Usage
@@ -171,48 +171,48 @@ gmailwiz analyze --format excel --output my_gmail_analysis.xlsx
 
 ```bash
 # Initial setup
-gmailwiz setup
+gmaildr setup
 
 # Check status
-gmailwiz status
+gmaildr status
 
 # Use custom configuration file
-gmailwiz --config-file my_config.json analyze
+gmaildr --config-file my_config.json analyze
 ```
 
 #### Email Analysis
 
 ```bash
 # Basic analysis (last 30 days)
-gmailwiz analyze
+gmaildr analyze
 
 # Analyze specific time period
-gmailwiz analyze --days 90
+gmaildr analyze --days 90
 
 # Limit number of emails
-gmailwiz analyze --max-emails 1000
+gmaildr analyze --max-emails 1000
 
 # Save to specific file
-gmailwiz analyze --output analysis.json --format json
+gmaildr analyze --output analysis.json --format json
 
 # Disable caching
-gmailwiz analyze --no-cache
+gmaildr analyze --no-cache
 ```
 
 #### Quick Insights
 
 ```bash
 # Show top senders
-gmailwiz top-senders --limit 10
+gmaildr top-senders --limit 10
 
 # Filter by specific sender
-gmailwiz top-senders --sender example@domain.com
+gmaildr top-senders --sender example@domain.com
 ```
 
 ### Python API
 
 ```python
-from gmailwiz import GmailClient, EmailAnalyzer
+from gmaildr import GmailClient, EmailAnalyzer
 from datetime import datetime, timedelta
 
 # Initialize client

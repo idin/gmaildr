@@ -1,8 +1,8 @@
 """
-Command-line interface for GmailWiz.
+Command-line interface for GmailDr.
 
 This module provides a user-friendly CLI for running Gmail analysis
-and managing the GmailWiz package functionality.
+and managing the GmailDr package functionality.
 """
 
 import os
@@ -37,7 +37,7 @@ console = Console()
 @click.pass_context
 def cli(ctx: click.Context, config_file: str, verbose: bool):
     """
-    GmailWiz - A powerful Gmail analysis, management, and automation wizard.
+    GmailDr - A powerful Gmail analysis, management, and automation wizard.
     
     This tool helps you understand your email patterns, identify top senders,
     manage your Gmail storage, and automate email operations.
@@ -61,7 +61,7 @@ def cli(ctx: click.Context, config_file: str, verbose: bool):
 @click.pass_context
 def setup(ctx: click.Context, credentials_file: Optional[str]):
     """
-    Set up GmailWiz with your Google credentials.
+    Set up GmailDr with your Google credentials.
     
     This command helps you configure the tool with your Gmail API credentials
     and test the connection to ensure everything is working properly.
@@ -69,8 +69,8 @@ def setup(ctx: click.Context, credentials_file: Optional[str]):
     config_manager = ctx.obj['config_manager']
     config = config_manager.get_config()
     
-    console.print("\n[bold blue]GmailWiz Setup[/bold blue]")
-    console.print("This will help you configure GmailWiz with your Google credentials.\n")
+    console.print("\n[bold blue]GmailDr Setup[/bold blue]")
+    console.print("This will help you configure GmailDr with your Google credentials.\n")
     
     # Handle credentials file
     if credentials_file:
@@ -124,7 +124,7 @@ def setup(ctx: click.Context, credentials_file: Optional[str]):
     # Save configuration
     config_manager.save_configuration()
     console.print(f"\n[green]✓[/green] Configuration saved to {config_manager.config_file}")
-    console.print("\n[bold green]Setup complete![/bold green] You can now use GmailWiz.")
+    console.print("\n[bold green]Setup complete![/bold green] You can now use GmailDr.")
 
 
 @cli.command()
@@ -247,7 +247,7 @@ def top_senders(ctx: click.Context, sender: Optional[str], limit: int):
 @click.pass_context
 def status(ctx: click.Context):
     """
-    Show GmailWiz status and configuration.
+    Show GmailDr status and configuration.
     
     This command displays the current configuration, authentication status,
     and any cached analysis data information.
@@ -255,7 +255,7 @@ def status(ctx: click.Context):
     config_manager = ctx.obj['config_manager']
     config = config_manager.get_config()
     
-    console.print("\n[bold blue]GmailWiz Status[/bold blue]\n")
+    console.print("\n[bold blue]GmailDr Status[/bold blue]\n")
     
     # Configuration status
     config_table = Table(title="Configuration")

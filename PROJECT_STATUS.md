@@ -1,4 +1,4 @@
-# GmailWiz Project Status
+# GmailDr Project Status
 
 ## 🎯 Project Overview
 A Python tool for analyzing and cleaning Gmail accounts with comprehensive email metrics, content analysis, and automated email classification.
@@ -146,7 +146,7 @@ df = gmail.get_emails(
 
 ### Human Email Detection
 ```python
-from gmailwiz.analysis import detect_human_emails, get_human_sender_summary
+from gmaildr.analysis import detect_human_emails, get_human_sender_summary
 
 # Detect human emails
 human_emails_df = detect_human_emails(

@@ -1,12 +1,12 @@
 """
-GmailWiz - A powerful Gmail analysis, management, and automation wizard.
+GmailDr - A powerful Gmail analysis, management, and automation wizard.
 
 This package provides tools to connect to Gmail, analyze email data,
 generate statistics about email senders and usage patterns, and automate
 email management tasks.
 """
 
-__version__ = "0.1.0"
+__version__ = "1.1.0"
 __author__ = "idin"
 
 from .core import Gmail, GmailClient, ConfigManager, setup_logging

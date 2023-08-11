@@ -4,7 +4,7 @@ Tests for add_label functionality.
 
 import pytest
 
-from gmailwiz.core.gmail import Gmail
+from gmaildr.core.gmail import Gmail
 
 
 def test_add_label_single_string():

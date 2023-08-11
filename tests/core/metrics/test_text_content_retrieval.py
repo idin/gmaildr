@@ -5,7 +5,7 @@ This test ensures that email text content is properly extracted and added to the
 """
 
 import pytest
-from gmailwiz import Gmail
+from gmaildr import Gmail
 
 
 def test_text_content_is_retrieved():

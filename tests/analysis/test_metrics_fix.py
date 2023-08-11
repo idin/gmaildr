@@ -8,7 +8,7 @@ HTML-based metrics are calculated correctly instead of being hardcoded to zero.
 import pytest
 import pandas as pd
 
-from gmailwiz.analysis.metrics_processor import add_content_metrics_to_dataframe
+from gmaildr.analysis.metrics_processor import add_content_metrics_to_dataframe
 
 
 class TestMetricsFix:
@@ -184,7 +184,7 @@ class TestMetricsFix:
 
 def test_metrics_processor_import():
     """Test that the metrics processor can be imported and used."""
-    from gmailwiz.analysis.metrics_processor import add_content_metrics_to_dataframe
+    from gmaildr.analysis.metrics_processor import add_content_metrics_to_dataframe
     
     # Test that function exists and is callable
     assert callable(add_content_metrics_to_dataframe)

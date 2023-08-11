@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Example usage of GmailWiz package.
+Example usage of GmailDr package.
 
-This script demonstrates how to use the GmailWiz package
+This script demonstrates how to use the GmailDr package
 to analyze your Gmail inbox programmatically.
 """
 
 import os
 from datetime import datetime, timedelta
-from gmailwiz import GmailClient, EmailAnalyzer
-from gmailwiz.config import ConfigManager, setup_logging
+from gmaildr import GmailClient, EmailAnalyzer
+from gmaildr.core.config import ConfigManager, setup_logging
 
 
 def main():
     """
-    Example of using GmailWiz to analyze email data.
+    Example of using GmailDr to analyze email data.
     
     This function demonstrates the basic workflow:
     1. Set up configuration
@@ -27,7 +27,7 @@ def main():
     config = config_manager.get_config()
     setup_logging(config)
     
-    print("GmailWiz Example Usage")
+    print("GmailDr Example Usage")
     print("=" * 40)
     
     # Check if credentials file exists

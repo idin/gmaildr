@@ -5,8 +5,8 @@ Test to compare EmailDataFrame behavior with regular pandas DataFrame.
 import pytest
 import pandas as pd
 import numpy as np
-from gmailwiz.core.gmail import Gmail
-from gmailwiz.core.email_dataframe import EmailDataFrame, EmailSeries
+from gmaildr.core.gmail import Gmail
+from gmaildr.core.email_dataframe import EmailDataFrame, EmailSeries
 
 
 def test_dataframe_consistency():

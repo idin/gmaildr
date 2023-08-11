@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test module structure for GmailWiz.
+Test module structure for GmailDr.
 
 This test file verifies that the module structure is organized correctly after reorganization.
 """
@@ -16,7 +16,7 @@ sys.path.insert(0, str(project_root))
 
 def test_core_module_structure():
     """Test core module structure."""
-    core_module = importlib.import_module('gmailwiz.core')
+    core_module = importlib.import_module('gmaildr.core')
     
     # Check that core module has expected attributes
     expected_attrs = ['Gmail', 'GmailClient', 'ConfigManager', 'setup_logging']
@@ -28,7 +28,7 @@ def test_core_module_structure():
 
 def test_analysis_module_structure():
     """Test analysis module structure."""
-    analysis_module = importlib.import_module('gmailwiz.analysis')
+    analysis_module = importlib.import_module('gmaildr.analysis')
     
     # Check that analysis module has expected attributes
     expected_attrs = [
@@ -44,7 +44,7 @@ def test_analysis_module_structure():
 
 def test_utils_module_structure():
     """Test utils module structure."""
-    utils_module = importlib.import_module('gmailwiz.utils')
+    utils_module = importlib.import_module('gmaildr.utils')
     
     # Check that utils module has expected attributes
     expected_attrs = ['EmailProgressTracker']
@@ -56,7 +56,7 @@ def test_utils_module_structure():
 
 def test_cache_module_structure():
     """Test cache module structure."""
-    cache_module = importlib.import_module('gmailwiz.caching')
+    cache_module = importlib.import_module('gmaildr.caching')
     
     # Check that cache module has expected attributes
     expected_attrs = ['EmailCacheManager', 'CacheConfig']
@@ -68,7 +68,7 @@ def test_cache_module_structure():
 
 def test_main_package_structure():
     """Test main package structure."""
-    main_module = importlib.import_module('gmailwiz')
+    main_module = importlib.import_module('gmaildr')
     
     # Check that main package has expected attributes
     expected_attrs = [
@@ -86,7 +86,7 @@ def test_main_package_structure():
 
 def test_core_files_exist():
     """Test that core files exist in the right place."""
-    core_dir = project_root / 'gmailwiz' / 'core'
+    core_dir = project_root / 'gmaildr' / 'core'
     expected_files = ['__init__.py', 'gmail.py', 'gmail_client.py', 'config.py']
     
     for file in expected_files:
@@ -98,7 +98,7 @@ def test_core_files_exist():
 
 def test_analysis_files_exist():
     """Test that analysis files exist in the right place."""
-    analysis_dir = project_root / 'gmailwiz' / 'analysis'
+    analysis_dir = project_root / 'gmaildr' / 'analysis'
     expected_files = ['__init__.py', 'email_analyzer.py', 'email_metrics.py', 'metrics_processor.py']
     
     for file in expected_files:
@@ -110,7 +110,7 @@ def test_analysis_files_exist():
 
 def test_utils_files_exist():
     """Test that utils files exist in the right place."""
-    utils_dir = project_root / 'gmailwiz' / 'utils'
+    utils_dir = project_root / 'gmaildr' / 'utils'
     expected_files = ['__init__.py', 'progress.py', 'cli.py']
     
     for file in expected_files:
@@ -122,7 +122,7 @@ def test_utils_files_exist():
 
 def test_cache_files_exist():
     """Test that cache files exist in the right place."""
-    cache_dir = project_root / 'gmailwiz' / 'caching'
+    cache_dir = project_root / 'gmaildr' / 'caching'
     expected_files = [
         '__init__.py', 'cache_config.py', 'cache_manager.py', 
         'file_storage.py', 'index_manager.py', 'schema_manager.py'
@@ -136,7 +136,7 @@ def test_cache_files_exist():
 
 
 if __name__ == "__main__":
-    print("🧪 Testing GmailWiz module structure...")
+    print("🧪 Testing GmailDr module structure...")
     test_core_module_structure()
     test_analysis_module_structure()
     test_utils_module_structure()

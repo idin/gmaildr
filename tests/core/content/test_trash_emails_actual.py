@@ -5,7 +5,7 @@ This test helps debug the issue where get_trash_emails() returns emails
 that are not actually in the trash folder.
 """
 
-from gmailwiz import Gmail
+from gmaildr import Gmail
 import pandas as pd
 
 

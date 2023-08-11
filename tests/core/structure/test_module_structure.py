@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test module structure for GmailWiz.
+Test module structure for GmailDr.
 
 This test file verifies that the module structure is organized correctly after reorganization.
 """
@@ -10,7 +10,7 @@ import unittest
 import importlib
 
 # Add the project root to the path
-from gmailwiz.utils.paths import get_project_root, get_core_dir, get_analysis_dir, get_utils_dir, get_caching_dir
+from gmaildr.utils.paths import get_project_root, get_core_dir, get_analysis_dir, get_utils_dir, get_caching_dir
 sys.path.insert(0, str(get_project_root()))
 
 
@@ -20,7 +20,7 @@ class TestModuleStructure(unittest.TestCase):
     def test_core_module_structure(self):
         """Test core module structure."""
         try:
-            core_module = importlib.import_module('gmailwiz.core')
+            core_module = importlib.import_module('gmaildr.core')
             
             # Check that core module has expected attributes
             expected_attrs = ['Gmail', 'GmailClient', 'ConfigManager', 'setup_logging']
@@ -34,7 +34,7 @@ class TestModuleStructure(unittest.TestCase):
     def test_analysis_module_structure(self):
         """Test analysis module structure."""
         try:
-            analysis_module = importlib.import_module('gmailwiz.analysis')
+            analysis_module = importlib.import_module('gmaildr.analysis')
             
             # Check that analysis module has expected attributes
             expected_attrs = [
@@ -52,7 +52,7 @@ class TestModuleStructure(unittest.TestCase):
     def test_utils_module_structure(self):
         """Test utils module structure."""
         try:
-            utils_module = importlib.import_module('gmailwiz.utils')
+            utils_module = importlib.import_module('gmaildr.utils')
             
             # Check that utils module has expected attributes
             expected_attrs = ['EmailProgressTracker']
@@ -66,7 +66,7 @@ class TestModuleStructure(unittest.TestCase):
     def test_cache_module_structure(self):
         """Test cache module structure."""
         try:
-            cache_module = importlib.import_module('gmailwiz.caching')
+            cache_module = importlib.import_module('gmaildr.caching')
             
             # Check that cache module has expected attributes
             expected_attrs = ['EmailCacheManager', 'CacheConfig']
@@ -80,7 +80,7 @@ class TestModuleStructure(unittest.TestCase):
     def test_main_package_structure(self):
         """Test main package structure."""
         try:
-            main_module = importlib.import_module('gmailwiz')
+            main_module = importlib.import_module('gmaildr')
             
             # Check that main package has expected attributes
             expected_attrs = [
@@ -150,5 +150,5 @@ class TestFileOrganization(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    print("🧪 Testing GmailWiz module structure...")
+    print("🧪 Testing GmailDr module structure...")
     unittest.main(verbosity=2)

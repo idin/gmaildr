@@ -3,7 +3,7 @@ Test to check if text fetching is causing performance issues.
 """
 
 import time
-from gmailwiz import Gmail
+from gmaildr import Gmail
 
 
 def test_text_fetching_performance():

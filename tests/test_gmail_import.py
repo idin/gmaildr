@@ -1,14 +1,14 @@
 """
-Test that Gmail can be imported correctly from gmailwiz package.
+Test that Gmail can be imported correctly from gmaildr package.
 """
 
 import pytest
 
 
 def test_gmail_import():
-    """Test that Gmail can be imported from gmailwiz."""
+    """Test that Gmail can be imported from gmaildr."""
     try:
-        from gmailwiz import Gmail
+        from gmaildr import Gmail
         assert Gmail is not None
         print("✅ Gmail import successful")
     except ImportError as e:
@@ -17,7 +17,7 @@ def test_gmail_import():
 
 def test_gmail_instantiation():
     """Test that Gmail can be instantiated."""
-    from gmailwiz import Gmail
+    from gmaildr import Gmail
     
     gmail = Gmail()
     assert gmail is not None

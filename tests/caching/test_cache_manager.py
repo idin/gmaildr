@@ -16,8 +16,8 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
-from gmailwiz.caching import EmailCacheManager
-from gmailwiz.models import EmailMessage
+from gmaildr.caching import EmailCacheManager
+from gmaildr.models import EmailMessage
 
 
 class TestEmailCacheManager:
@@ -244,7 +244,7 @@ class TestEmailCacheManager:
         ]
         
         # Mock Gmail class
-        with patch('gmailwiz.caching.cache_manager.Gmail') as mock_gmail_class:
+        with patch('gmaildr.caching.cache_manager.Gmail') as mock_gmail_class:
             mock_gmail_instance = Mock()
             mock_gmail_class.return_value = mock_gmail_instance
             mock_gmail_instance._add_email_text.return_value = [
@@ -319,7 +319,7 @@ class TestEmailCacheManager:
         ]
         
         # Mock the Gmail class to raise AttributeError when _add_email_text is called
-        with patch('gmailwiz.caching.cache_manager.Gmail') as mock_gmail_class:
+        with patch('gmaildr.caching.cache_manager.Gmail') as mock_gmail_class:
             mock_gmail_instance = Mock()
             mock_gmail_instance._add_email_text.side_effect = AttributeError("'Mock' object has no attribute '_add_email_text'")
             mock_gmail_class.return_value = mock_gmail_instance
@@ -490,11 +490,11 @@ class TestCacheIntegration:
 
 def test_cache_manager_import():
     """Test that cache manager can be imported correctly."""
-    from gmailwiz.caching import EmailCacheManager
+    from gmaildr.caching import EmailCacheManager
     assert EmailCacheManager is not None
 
 
 def test_cache_config_import():
     """Test that cache config can be imported correctly."""
-    from gmailwiz.caching import CacheConfig
+    from gmaildr.caching import CacheConfig
     assert CacheConfig is not None

@@ -6,7 +6,7 @@ include_metrics=True was causing a TypeError due to NaN values in text_content.
 """
 
 import pytest
-from gmailwiz import Gmail
+from gmaildr import Gmail
 
 
 def test_get_emails_with_text_and_metrics():

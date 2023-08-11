@@ -74,8 +74,8 @@ Looks for conversational elements:
 ### Basic Human Email Detection
 
 ```python
-from gmailwiz import Gmail
-from gmailwiz.analysis import detect_human_emails, get_human_sender_summary
+from gmaildr import Gmail
+from gmaildr.analysis import detect_human_emails, get_human_sender_summary
 
 # Initialize Gmail connection
 gmail = Gmail()
@@ -101,7 +101,7 @@ print(summary)
 ### Advanced Analysis with Custom Threshold
 
 ```python
-from gmailwiz.analysis import HumanEmailDetector
+from gmaildr.analysis import HumanEmailDetector
 
 # Create detector instance
 detector = HumanEmailDetector()
@@ -150,7 +150,7 @@ relaxed_humans = detect_human_emails(emails_df, human_threshold=0.4)
 ### Custom Pattern Matching
 
 ```python
-from gmailwiz.analysis import HumanEmailDetector
+from gmaildr.analysis import HumanEmailDetector
 
 detector = HumanEmailDetector()
 

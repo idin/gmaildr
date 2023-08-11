@@ -9,7 +9,7 @@ import unittest
 import sys
 import os
 
-
+raise RuntimeError("We do not use unittest")
 class TestEnvironment(unittest.TestCase):
     """Test that the correct environment is being used."""
     
@@ -49,15 +49,15 @@ class TestEnvironment(unittest.TestCase):
         
         self.assertEqual(len(missing_packages), 0, f"Missing packages: {missing_packages}")
     
-    def test_gmailwiz_imports(self):
-        """Test that gmailwiz modules can be imported."""
+    def test_gmaildr_imports(self):
+        """Test that gmaildr modules can be imported."""
         try:
-            from gmailwiz import Gmail
-            from gmailwiz.analysis import HumanEmailDetector
-            from gmailwiz.core import GmailClient
-            print("✅ All gmailwiz modules import successfully")
+            from gmaildr import Gmail
+            from gmaildr.analysis import HumanEmailDetector
+            from gmaildr.core import GmailClient
+            print("✅ All gmaildr modules import successfully")
         except ImportError as e:
-            self.fail(f"Failed to import gmailwiz modules: {e}")
+            self.fail(f"Failed to import gmaildr modules: {e}")
 
 
 if __name__ == '__main__':

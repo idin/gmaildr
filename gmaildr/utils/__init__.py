@@ -1,5 +1,5 @@
 """
-Utility functions for the gmailwiz package.
+Utility functions for the gmaildr package.
 """
 
 from .progress import EmailProgressTracker

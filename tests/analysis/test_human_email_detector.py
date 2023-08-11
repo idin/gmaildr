@@ -8,7 +8,7 @@ accurate identification of human vs automated email senders.
 import pandas as pd
 from datetime import datetime
 
-from gmailwiz.analysis.human_email_detector import (
+from gmaildr.analysis.human_email_detector import (
     HumanEmailDetector,
     HumanEmailScore,
     detect_human_emails,

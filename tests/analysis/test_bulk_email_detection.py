@@ -5,7 +5,7 @@ This module contains tests to ensure that bulk email indicators are properly
 detected in email content.
 """
 
-from gmailwiz.analysis.email_metrics import EmailContentAnalyzer
+from gmaildr.analysis.email_metrics import EmailContentAnalyzer
 
 
 def test_bulk_email_detection_noreply():

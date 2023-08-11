@@ -1,5 +1,5 @@
 """
-Path utilities for GmailWiz package.
+Path utilities for GmailDr package.
 
 This module provides utility functions to get package directories and paths
 that can be used by tests and other modules.
@@ -11,14 +11,14 @@ import os
 
 def get_package_root() -> Path:
     """
-    Get the root directory of the GmailWiz package.
+    Get the root directory of the GmailDr package.
     
     Returns:
-        Path: Path to the gmailwiz package root directory.
+        Path: Path to the gmaildr package root directory.
     """
     # Get the directory containing this file
     current_file = Path(__file__)
-    # Go up to utils, then up to gmailwiz root
+    # Go up to utils, then up to gmaildr root
     return current_file.parent.parent
 
 
@@ -27,7 +27,7 @@ def get_core_dir() -> Path:
     Get the core module directory.
     
     Returns:
-        Path: Path to the gmailwiz/core directory.
+        Path: Path to the gmaildr/core directory.
     """
     return get_package_root() / 'core'
 
@@ -37,7 +37,7 @@ def get_analysis_dir() -> Path:
     Get the analysis module directory.
     
     Returns:
-        Path: Path to the gmailwiz/analysis directory.
+        Path: Path to the gmaildr/analysis directory.
     """
     return get_package_root() / 'analysis'
 
@@ -47,7 +47,7 @@ def get_utils_dir() -> Path:
     Get the utils module directory.
     
     Returns:
-        Path: Path to the gmailwiz/utils directory.
+        Path: Path to the gmaildr/utils directory.
     """
     return get_package_root() / 'utils'
 
@@ -57,14 +57,14 @@ def get_caching_dir() -> Path:
     Get the caching module directory.
     
     Returns:
-        Path: Path to the gmailwiz/caching directory.
+        Path: Path to the gmaildr/caching directory.
     """
     return get_package_root() / 'caching'
 
 
 def get_project_root() -> Path:
     """
-    Get the project root directory (parent of gmailwiz package).
+    Get the project root directory (parent of gmaildr package).
     
     Returns:
         Path: Path to the project root directory.

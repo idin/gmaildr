@@ -13,14 +13,14 @@ sys.path.insert(0, str(project_root))
 
 def test_email_analyzer_import():
     """Test that EmailAnalyzer class can be imported."""
-    from gmailwiz.analysis.email_analyzer import EmailAnalyzer
+    from gmaildr.analysis.email_analyzer import EmailAnalyzer
     print("✅ EmailAnalyzer class import successful")
 
 
 def test_email_analyzer_initialization():
     """Test EmailAnalyzer class initialization."""
-    from gmailwiz.analysis.email_analyzer import EmailAnalyzer
-    from gmailwiz.core.gmail_client import GmailClient
+    from gmaildr.analysis.email_analyzer import EmailAnalyzer
+    from gmaildr.core.gmail_client import GmailClient
     
     # Mock GmailClient for testing
     class MockGmailClient:

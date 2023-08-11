@@ -6,7 +6,7 @@ This example demonstrates how to use the EmailListManager to create and manage
 blacklists, whitelists, friend lists, and other email categorizations.
 """
 
-from gmailwiz.utils import EmailListManager
+from gmaildr.utils import EmailListManager
 
 
 def main():

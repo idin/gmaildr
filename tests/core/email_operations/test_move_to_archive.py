@@ -4,7 +4,7 @@ Tests for move_to_archive functionality.
 
 import pytest
 
-from gmailwiz.core.gmail import Gmail
+from gmaildr.core.gmail import Gmail
 
 
 def test_move_to_archive_single_message():

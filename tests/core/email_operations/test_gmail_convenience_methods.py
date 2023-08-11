@@ -9,7 +9,7 @@ This module contains tests for the new convenience methods added to the Gmail cl
 - get_inbox_emails
 """
 
-from gmailwiz import Gmail
+from gmaildr import Gmail
 
 
 def test_get_label_id():

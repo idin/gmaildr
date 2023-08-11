@@ -8,7 +8,7 @@ and provides performance improvements over the sequential version.
 import pytest
 import pandas as pd
 import time
-from gmailwiz.analysis.metrics_processor import (
+from gmaildr.analysis.metrics_processor import (
     add_content_metrics_to_dataframe_parallel,
     _analyze_single_email
 )
@@ -158,7 +158,7 @@ class TestParallelMetrics:
 
 def test_parallel_metrics_import():
     """Test that parallel metrics functions can be imported."""
-    from gmailwiz.analysis.metrics_processor import add_content_metrics_to_dataframe_parallel, _analyze_single_email
+    from gmaildr.analysis.metrics_processor import add_content_metrics_to_dataframe_parallel, _analyze_single_email
     
     # Test that functions exist and are callable
     assert callable(add_content_metrics_to_dataframe_parallel)

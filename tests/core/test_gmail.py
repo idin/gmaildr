@@ -13,13 +13,13 @@ sys.path.insert(0, str(project_root))
 
 def test_gmail_import():
     """Test that Gmail class can be imported."""
-    from gmailwiz.core.gmail import Gmail
+    from gmaildr.core.gmail import Gmail
     print("✅ Gmail class import successful")
 
 
 def test_gmail_initialization():
     """Test Gmail class initialization."""
-    from gmailwiz.core.gmail import Gmail
+    from gmaildr.core.gmail import Gmail
     
     # Test with default parameters
     gmail = Gmail()
@@ -29,7 +29,7 @@ def test_gmail_initialization():
 
 def test_gmail_with_cache():
     """Test Gmail class with cache enabled."""
-    from gmailwiz.core.gmail import Gmail
+    from gmaildr.core.gmail import Gmail
     
     gmail = Gmail(enable_cache=True)
     assert gmail.cache_manager is not None

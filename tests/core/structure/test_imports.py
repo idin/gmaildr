@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test imports for GmailWiz package.
+Test imports for GmailDr package.
 
 This test file verifies that all imports work correctly after the module reorganization.
 """
@@ -15,12 +15,12 @@ sys.path.insert(0, str(project_root))
 
 
 class TestImports(unittest.TestCase):
-    """Test that all GmailWiz imports work correctly."""
+    """Test that all GmailDr imports work correctly."""
     
     def test_main_imports(self):
         """Test main package imports."""
         try:
-            from gmailwiz import Gmail, GmailClient, EmailAnalyzer
+            from gmaildr import Gmail, GmailClient, EmailAnalyzer
             print("✅ Main imports successful")
         except ImportError as e:
             self.fail(f"Main imports failed: {e}")
@@ -28,7 +28,7 @@ class TestImports(unittest.TestCase):
     def test_core_imports(self):
         """Test core module imports."""
         try:
-            from gmailwiz.core import Gmail, GmailClient, ConfigManager, setup_logging
+            from gmaildr.core import Gmail, GmailClient, ConfigManager, setup_logging
             print("✅ Core imports successful")
         except ImportError as e:
             self.fail(f"Core imports failed: {e}")
@@ -36,7 +36,7 @@ class TestImports(unittest.TestCase):
     def test_analysis_imports(self):
         """Test analysis module imports."""
         try:
-            from gmailwiz.analysis import (
+            from gmaildr.analysis import (
                 EmailAnalyzer,
                 EmailContentAnalyzer,
                 analyze_email_text,
@@ -51,7 +51,7 @@ class TestImports(unittest.TestCase):
     def test_utils_imports(self):
         """Test utils module imports."""
         try:
-            from gmailwiz.utils import EmailProgressTracker
+            from gmaildr.utils import EmailProgressTracker
             print("✅ Utils imports successful")
         except ImportError as e:
             self.fail(f"Utils imports failed: {e}")
@@ -59,7 +59,7 @@ class TestImports(unittest.TestCase):
     def test_models_imports(self):
         """Test models imports."""
         try:
-            from gmailwiz.models import EmailMessage, SenderStatistics, AnalysisReport
+            from gmaildr.models import EmailMessage, SenderStatistics, AnalysisReport
             print("✅ Models imports successful")
         except ImportError as e:
             self.fail(f"Models imports failed: {e}")
@@ -67,12 +67,12 @@ class TestImports(unittest.TestCase):
     def test_cache_imports(self):
         """Test cache module imports."""
         try:
-            from gmailwiz.caching import EmailCacheManager, CacheConfig
+            from gmaildr.caching import EmailCacheManager, CacheConfig
             print("✅ Cache imports successful")
         except ImportError as e:
             self.fail(f"Cache imports failed: {e}")
 
 
 if __name__ == "__main__":
-    print("🧪 Testing GmailWiz imports...")
+    print("🧪 Testing GmailDr imports...")
     unittest.main(verbosity=2)

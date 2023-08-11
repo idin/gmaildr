@@ -8,7 +8,7 @@ This script tests the email modification features by:
 """
 
 import time
-from gmailwiz import Gmail
+from gmaildr import Gmail
 import pandas as pd
 
 def test_email_modification():

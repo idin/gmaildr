@@ -6,7 +6,7 @@ all valid combinations of days, start_date, and end_date parameters.
 """
 
 from datetime import datetime, timedelta
-from gmailwiz.utils.date_utils import parse_date_range
+from gmaildr.utils.date_utils import parse_date_range
 
 
 def test_parse_date_range_all_none():

@@ -1,8 +1,8 @@
-# GmailWiz Cache System Documentation
+# GmailDr Cache System Documentation
 
 ## Overview
 
-The GmailWiz cache system provides intelligent caching of email data to improve performance and reduce API calls. The cache stores emails on disk in an organized, indexed structure that supports schema versioning and intelligent merging.
+The GmailDr cache system provides intelligent caching of email data to improve performance and reduce API calls. The cache stores emails on disk in an organized, indexed structure that supports schema versioning and intelligent merging.
 
 ## Cache Directory Structure
 
@@ -100,7 +100,7 @@ Tracks the current schema version for cache validation:
 
 ### 1. EmailCacheManager
 
-**Location**: `gmailwiz/cache/cache_manager.py`
+**Location**: `gmaildr/cache/cache_manager.py`
 
 **Purpose**: Main orchestrator for all cache operations.
 
@@ -120,7 +120,7 @@ Tracks the current schema version for cache validation:
 
 ### 2. EmailFileStorage
 
-**Location**: `gmailwiz/cache/file_storage.py`
+**Location**: `gmaildr/cache/file_storage.py`
 
 **Purpose**: Handles individual file operations for cached emails.
 
@@ -132,7 +132,7 @@ Tracks the current schema version for cache validation:
 
 ### 3. EmailIndexManager
 
-**Location**: `gmailwiz/cache/index_manager.py`
+**Location**: `gmaildr/cache/index_manager.py`
 
 **Purpose**: Manages quick lookup indexes for efficient cache operations.
 
@@ -145,7 +145,7 @@ Tracks the current schema version for cache validation:
 
 ### 4. EmailSchemaManager
 
-**Location**: `gmailwiz/cache/schema_manager.py`
+**Location**: `gmaildr/cache/schema_manager.py`
 
 **Purpose**: Handles schema versioning and intelligent merging of cached data.
 
@@ -156,7 +156,7 @@ Tracks the current schema version for cache validation:
 
 ### 5. CacheConfig
 
-**Location**: `gmailwiz/cache/cache_config.py`
+**Location**: `gmaildr/cache/cache_config.py`
 
 **Purpose**: Manages cache configuration and directory paths.
 
@@ -241,7 +241,7 @@ success = gmail.rebuild_cache_indexes()
 gmail = Gmail(enable_cache=False)
 
 # Custom cache directory
-from gmailwiz.cache import CacheConfig
+from gmaildr.cache import CacheConfig
 config = CacheConfig(
     cache_dir="/custom/cache/path",
     max_cache_age_days=60,

@@ -5,7 +5,7 @@ This test verifies that caps_word_count correctly identifies and counts
 words that are entirely in uppercase (2+ characters).
 """
 
-from gmailwiz.analysis.email_metrics import EmailContentAnalyzer
+from gmaildr.analysis.email_metrics import EmailContentAnalyzer
 
 
 def test_caps_word_count_basic():

@@ -5,7 +5,7 @@ This test verifies that proper_capitalization_ratio correctly calculates
 the ratio of properly capitalized sentence-starting words.
 """
 
-from gmailwiz.analysis.email_metrics import EmailContentAnalyzer
+from gmaildr.analysis.email_metrics import EmailContentAnalyzer
 
 
 def test_proper_capitalization_ratio_basic():

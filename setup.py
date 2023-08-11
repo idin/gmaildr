@@ -11,14 +11,14 @@ with open("requirements.txt", "r", encoding="utf-8") as file_handle:
     requirements = [line.strip() for line in file_handle if line.strip() and not line.startswith("#")]
 
 setup(
-    name="gmailwiz",
-    version="0.1.0",
+    name="gmaildr",
+    version="1.1.0",
     author="idin",
     author_email="",
     description="A powerful Gmail analysis, management, and automation wizard",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/idin/gmailwiz",
+    url="https://github.com/idin/gmaildr",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -45,7 +45,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "gmailwiz=gmailwiz.utils.cli:cli",
+            "gmaildr=gmaildr.utils.cli:cli",
         ],
     },
 ) 
