@@ -1,4 +1,4 @@
-# GmailDr
+# Gmail Doctor 🫀
 
 A powerful Gmail analysis, management, and automation wizard. Connect to Gmail and run comprehensive analysis on your email data. Generate detailed statistics about email senders, storage usage, and email patterns to better understand and manage your Gmail inbox.
 
@@ -41,23 +41,15 @@ emails = gmail.get_emails(end_date=end_date, days=7)
 
 ### 🗑️ Trash Management
 ```python
-# Move all emails in trash from past year to archive
-from datetime import datetime, timedelta
-
-gmail = Gmail()
-end_date = datetime.now()
-
 # Get all emails in trash from past year
-trash_emails = gmail.get_emails(
-    start_date=start_date,
-    end_date=end_date,
-    in_folder='trash',
-    days=365
-)
+gmail = Gmail()
+trash_emails = gmail.get_trash_emails(days=365)
 
-# Move them to archive
-message_ids = trash_emails['message_id'].tolist()
-gmail.modify_labels(message_ids=message_ids, remove_labels='TRASH')
+# Move them to archive using EmailDataFrame methods
+trash_emails.move_to_archive()
+
+# Or move them back to inbox
+trash_emails.move_to_inbox()
 ```
 
 ### 📧 Email Analysis with Filters
@@ -93,10 +85,15 @@ work_emails = gmail.get_emails(
     days=30,
     from_sender="boss@company.com"
 )
-gmail.modify_labels(
-    message_ids=work_emails['message_id'].tolist(),
-    add_labels=label_id
-)
+
+# Add label using EmailDataFrame methods
+work_emails.add_label(label_id)
+
+# Or add multiple labels
+work_emails.add_labels(['WORK', 'URGENT'])
+
+# Remove labels
+work_emails.remove_label('SPAM')
 
 # Check if label exists
 if gmail.has_label("Project_Alpha"):
@@ -107,15 +104,15 @@ if gmail.has_label("Project_Alpha"):
 ```python
 # Mark multiple emails as read
 emails = gmail.get_emails(days=1, is_unread=True)
-gmail.mark_as_read(emails['message_id'].tolist())
+emails.mark_as_read()
 
 # Star important emails
 important_emails = gmail.get_emails(days=7, is_important=True)
-gmail.star_email(important_emails['message_id'].tolist())
+important_emails.star()
 
 # Move emails to trash
 old_emails = gmail.get_emails(days=365, is_unread=True)
-gmail.move_to_trash(old_emails['message_id'].tolist())
+old_emails.move_to_trash()
 ```
 
 ## Installation
@@ -123,8 +120,8 @@ gmail.move_to_trash(old_emails['message_id'].tolist())
 ### From Source
 
 ```bash
-git clone https://github.com/idin/gmailcleaner.git
-cd gmailcleaner
+git clone https://github.com/idin/gmaildr.git
+cd gmaildr
 pip install -e .
 ```
 
@@ -161,6 +158,45 @@ gmaildr analyze --days 7 --max-emails 500
 
 # Export to Excel format
 gmaildr analyze --format excel --output my_gmail_analysis.xlsx
+```
+
+### 📧 Email Operations with EmailDataFrame
+```python
+# Get emails and perform operations directly
+emails = gmail.get_emails(days=7)
+
+# Mark emails as read
+emails.mark_as_read()
+
+# Star important emails
+emails.star()
+
+# Move to different folders
+emails.move_to_trash()
+emails.move_to_archive()
+emails.move_to_inbox()
+
+# Filter and operate on subsets
+unread_emails = emails[emails['is_unread'] == True]
+unread_emails.mark_as_read()
+
+# Chain operations
+emails.filter(is_unread=True).mark_as_read().add_label('PROCESSED')
+```
+
+### 📁 Folder-Specific Methods
+```python
+# Get emails from specific folders
+trash_emails = gmail.get_trash_emails(days=30)
+archive_emails = gmail.get_archive_emails(days=90)
+
+# Work with trash emails
+trash_emails.move_to_inbox()  # Restore from trash
+trash_emails.move_to_archive()  # Move to archive instead
+
+# Work with archived emails
+archive_emails.move_to_inbox()  # Move back to inbox
+archive_emails.move_to_trash()  # Move to trash
 ```
 
 ## Usage
@@ -339,8 +375,8 @@ Formatted Excel file with multiple sheets for different analysis aspects.
 ### Setting Up Development Environment
 
 ```bash
-git clone https://github.com/idin/gmailcleaner.git
-cd gmailcleaner
+git clone https://github.com/idin/gmaildr.git
+cd gmaildr
 pip install -e ".[dev]"
 ```
 
@@ -387,9 +423,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you encounter any issues or have questions:
 
-1. Check the [documentation](https://github.com/idin/gmailcleaner)
-2. Search [existing issues](https://github.com/idin/gmailcleaner/issues)
-3. Create a [new issue](https://github.com/idin/gmailcleaner/issues/new)
+1. Check the [documentation](https://github.com/idin/gmaildr)
+2. Search [existing issues](https://github.com/idin/gmaildr/issues)
+3. Create a [new issue](https://github.com/idin/gmaildr/issues/new)
 
 ## Roadmap
 
