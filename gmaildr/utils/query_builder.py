@@ -28,15 +28,17 @@ def build_gmail_search_query(
     Build Gmail search query from filter parameters.
     
     Args:
-        days: Number of days to search back from.
-        from_sender: Filter by sender email address(es).
-        subject_contains: Filter by text in subject line.
-        subject_does_not_contain: Filter by text not in subject line.
-        has_attachment: Filter by attachment presence.
-        is_unread: Filter by read/unread status.
-        is_important: Filter by importance.
-        in_folder: Filter by folder.
-        is_starred: Filter by starred status.
+        days: Number of days to search back from
+        start_date: Start date for search range
+        end_date: End date for search range
+        from_sender: Filter by sender email address(es)
+        subject_contains: Filter by text in subject line
+        subject_does_not_contain: Filter by text not in subject line
+        has_attachment: Filter by attachment presence
+        is_unread: Filter by read/unread status
+        is_important: Filter by importance
+        in_folder: Filter by folder
+        is_starred: Filter by starred status
         
     Returns:
         str: Gmail search query string.
@@ -52,8 +54,9 @@ def build_gmail_search_query(
     
     # Build Gmail search query
     query_parts = []
-    query_parts.append(f"after:{query_start_date.strftime('%Y/%m/%d')}")
-    query_parts.append(f"before:{query_end_date.strftime('%Y/%m/%d')}")
+    # Use Gmail's native date format - after: and before: are exclusive
+    query_parts.append(f"after:{query_start_date.strftime('%Y/%m/%d')}")  # type: ignore
+    query_parts.append(f"before:{query_end_date.strftime('%Y/%m/%d')}")  # type: ignore
     
     if from_sender:
         if isinstance(from_sender, str):

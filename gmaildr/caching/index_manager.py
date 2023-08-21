@@ -50,9 +50,9 @@ class EmailIndexManager:
         log_method = getattr(logger, level.lower(), logger.info)
         log_method(message)
         
-        # Print to console if verbose
+        # Log if verbose
         if self.verbose:
-            print(message)
+            logger.info(message)
     
     def _get_file_lock(self, file_path: Path):
         """

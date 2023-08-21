@@ -16,5 +16,5 @@ __all__ = [
     'get_package_root', 'get_core_dir', 'get_analysis_dir', 'get_utils_dir',
     'get_caching_dir', 'get_project_root', 'get_tests_dir', 'verify_package_structure',
     'count_patterns',
-    'match_patterns',
+    'match_patterns',   
 ]

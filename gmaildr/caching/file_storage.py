@@ -116,6 +116,32 @@ class EmailFileStorage:
             logger.error(f"Failed to delete email {message_id} from cache: {error}")
             return False
     
+    def delete_email_by_id(self, message_id: str) -> bool:
+        """
+        Delete email cache file by message ID (searches all dates).
+        
+        Args:
+            message_id: Email message ID.
+            
+        Returns:
+            True if successful, False otherwise.
+        """
+        try:
+            # Search for the email across all date directories
+            for date_dir in self.config.emails_dir.iterdir():
+                if date_dir.is_dir():
+                    file_path = date_dir / f"{message_id}.json"
+                    if file_path.exists():
+                        file_path.unlink()
+                        logger.debug(f"Deleted email {message_id} from cache: {file_path}")
+                        return True
+            
+            return False
+            
+        except Exception as error:
+            logger.error(f"Failed to delete email {message_id} from cache: {error}")
+            return False
+    
     def email_exists(self, message_id: str, date_str: str) -> bool:
         """
         Check if email cache file exists.

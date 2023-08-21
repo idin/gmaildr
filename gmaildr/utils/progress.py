@@ -58,7 +58,10 @@ class EmailProgressTracker:
         Update the progress bar by the specified count.
         
         Args:
-            count (int): Number of items processed in this update.
+            count: Number of items processed in this update
+            
+        Returns:
+            None
         """
         self.progress_bar.update(count)
     
@@ -67,7 +70,10 @@ class EmailProgressTracker:
         Update the progress bar description.
         
         Args:
-            description (str): New description text.
+            description: New description text
+            
+        Returns:
+            None
         """
         emoji = "⚡" if self.use_batch_mode else "📧"
         mode_text = " (batch mode)" if self.use_batch_mode else ""
@@ -79,12 +85,20 @@ class EmailProgressTracker:
         Set a postfix message that appears after the progress bar.
         
         Args:
-            message (str): Message to display after the progress bar.
+            message: Message to display after the progress bar
+            
+        Returns:
+            None
         """
         self.progress_bar.set_postfix_str(message)
     
     def close(self) -> None:
-        """Close the progress bar."""
+        """
+        Close the progress bar.
+        
+        Returns:
+            None
+        """
         self.progress_bar.close()
     
     def __enter__(self):
@@ -107,14 +121,14 @@ def track_email_processing(
     Track progress while iterating over email processing tasks.
     
     Args:
-        iterable: The iterator to track progress for.
-        total: Total number of items expected.
-        description: Description text for the progress bar.
-        use_batch_mode: Whether this is batch mode processing.
-        update_callback: Optional function to determine how many items each iteration represents.
+        iterable: The iterator to track progress for
+        total: Total number of items expected
+        description: Description text for the progress bar
+        use_batch_mode: Whether this is batch mode processing
+        update_callback: Optional function to determine how many items each iteration represents
         
-    Yields:
-        Items from the iterable with progress tracking.
+    Returns:
+        Iterator with progress tracking
     """
     with EmailProgressTracker(total=total, description=description, use_batch_mode=use_batch_mode) as tracker:
         for item in iterable:

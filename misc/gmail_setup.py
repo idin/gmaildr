@@ -1,255 +1,190 @@
-# ==========================================
-# CELL 1: Setup and Import
-# ==========================================
+#!/usr/bin/env python3
+"""
+Gmail Doctor Setup Script
+
+This script helps you set up Gmail Doctor for first-time use.
+It will guide you through the OAuth2 credentials setup process.
+"""
 
 import os
-from datetime import datetime, timedelta
-from gmail_cleaner import GmailClient, EmailAnalyzer
-from gmail_cleaner.config import ConfigManager, setup_logging
+import sys
+import json
+from pathlib import Path
 
-print("📦 Gmail Cleaner Setup Notebook")
-print("=" * 40)
+# Add the project root to the Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
-# Initialize configuration
-config_manager = ConfigManager()
-config = config_manager.get_config()
-setup_logging(config)
+def print_header():
+    """Print the setup header."""
+    print("\n" + "="*60)
+    print("🔐 Gmail Doctor Setup Script")
+    print("="*60)
+    print("This script will help you set up Gmail Doctor for first-time use.")
+    print("="*60)
 
-print(f"✅ Configuration loaded")
-print(f"📁 Working directory: {os.getcwd()}")
-
-
-# ==========================================
-# CELL 2: Check Requirements
-# ==========================================
-
-print("\n🔍 Checking requirements...")
-
-# Check credentials file
-credentials_exists = os.path.exists(config.credentials_file)
-print(f"🔐 Credentials file: {'✅' if credentials_exists else '❌'} {config.credentials_file}")
-
-# Check token file (created after first auth)
-token_exists = os.path.exists(config.token_file)
-print(f"🎫 Auth token: {'✅' if token_exists else '⚠️  Will be created on first auth'}")
-
-# Check output directory
-output_exists = os.path.exists(config.output_directory)
-print(f"📁 Output directory: {'✅' if output_exists else '⚠️  Will be created'}")
-
-if not credentials_exists:
-    print("""
-    ❌ Missing credentials.json file!
+def check_credentials():
+    """Check if credentials file exists and is valid."""
+    print("\n🔐 Checking credentials file...")
     
-    To fix this:
-    1. Go to Google Cloud Console
-    2. Enable Gmail API
-    3. Create OAuth2 credentials (Desktop app)
-    4. Download as 'credentials.json'
-    5. Place in this directory
-    """)
-else:
-    print("✅ All requirements met!")
-
-
-# ==========================================
-# CELL 3: Initialize Gmail Client
-# ==========================================
-
-print("\n🔑 Initializing Gmail client...")
-
-try:
-    # Initialize Gmail client
-    gmail_client = GmailClient(
-        credentials_file=config.credentials_file,
-        token_file=config.token_file
-    )
+    credentials_file = "credentials/credentials.json"
     
-    print("✅ Gmail client initialized")
+    if os.path.exists(credentials_file):
+        try:
+            with open(credentials_file, 'r') as f:
+                credentials_data = json.load(f)
+            
+            # Check for different credential file formats
+            if 'installed' in credentials_data:
+                print(f"✅ Credentials file found and appears valid (Desktop application format)")
+                return True, "Credentials file is valid (Desktop format)"
+            elif 'client_id' in credentials_data and 'client_secret' in credentials_data:
+                print(f"✅ Credentials file found and appears valid (Direct format)")
+                return True, "Credentials file is valid (Direct format)"
+            else:
+                print(f"❌ Credentials file exists but appears invalid")
+                return False, "Invalid credentials format"
+        except Exception as e:
+            print(f"❌ Error reading credentials file: {e}")
+            return False, f"File read error: {e}"
+    else:
+        print(f"❌ Credentials file missing: {credentials_file}")
+        return False, "Credentials file not found"
+
+def create_credentials_directory():
+    """Create the credentials directory if it doesn't exist."""
+    credentials_dir = "credentials"
+    if not os.path.exists(credentials_dir):
+        os.makedirs(credentials_dir)
+        print(f"✅ Created credentials directory: {credentials_dir}")
+    else:
+        print(f"✅ Credentials directory exists: {credentials_dir}")
+
+def show_setup_instructions():
+    """Show step-by-step setup instructions."""
+    print("\n" + "="*60)
+    print("📋 Gmail API Setup Instructions")
+    print("="*60)
+    print("\nFollow these steps to set up Gmail API access:\n")
     
-    # Test authentication
-    print("🔐 Testing authentication...")
+    print("1. 📋 Go to Google Cloud Console:")
+    print("   https://console.cloud.google.com/")
+    print()
     
-    if gmail_client.authenticate():
-        print("✅ Authentication successful!")
+    print("2. 🆕 Create a new project or select an existing one:")
+    print("   - Click on the project dropdown at the top")
+    print("   - Click 'New Project' or select existing")
+    print("   - Give it a name (e.g., 'GmailWiz')")
+    print()
+    
+    print("3. 🔧 Enable the Gmail API:")
+    print("   - Go to 'APIs & Services' > 'Library'")
+    print("   - Search for 'Gmail API'")
+    print("   - Click on it and press 'Enable'")
+    print()
+    
+    print("4. 🔑 Create OAuth2 credentials:")
+    print("   - Go to 'APIs & Services' > 'Credentials'")
+    print("   - Click 'Create Credentials' > 'OAuth 2.0 Client IDs'")
+    print("   - Choose 'Desktop application' as the application type")
+    print("   - Give it a name (e.g., 'GmailWiz')")
+    print("   - Click 'Create'")
+    print()
+    
+    print("5. 📥 Download the credentials:")
+    print("   - Click the download button (⬇️) next to your new OAuth2 client")
+    print("   - Save the JSON file as 'credentials.json'")
+    print()
+    
+    print("6. 📁 Place the credentials file:")
+    print("   - Move 'credentials.json' to: credentials/credentials.json")
+    print()
+    
+    print("7. 🔄 Run this setup script again:")
+    print("   - python misc/gmail_setup.py")
+    print()
+    
+    print("📝 Note: You only need to do this setup once.")
+    print("After the first authentication, GmailWiz will remember your credentials.")
+    print("="*60)
+
+def test_authentication():
+    """Test the Gmail authentication."""
+    print("\n🔐 Testing Gmail authentication...")
+    
+    try:
+        from gmaildr.core.gmail.main import Gmail
         
-        # Get user profile
-        profile = gmail_client.get_user_profile()
+        # Try to initialize Gmail
+        gmail = Gmail(verbose=True)
+        
+        # Test getting user profile
+        profile = gmail.client.get_user_profile()
         if profile:
             email = profile.get('emailAddress', 'Unknown')
             total_messages = profile.get('messagesTotal', 'Unknown')
+            print(f"✅ Authentication successful!")
             print(f"📧 Connected to: {email}")
             print(f"📊 Total messages in account: {total_messages:,}" if isinstance(total_messages, int) else f"📊 Total messages: {total_messages}")
-        
-        # Test basic search
-        print("\n🔍 Testing email search...")
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=30)
-        
-        message_ids = gmail_client.get_emails_from_date_range(
-            start_date=start_date,
-            end_date=end_date,
-            max_results=10
-        )
-        
-        print(f"✅ Found {len(message_ids)} emails in last 30 days")
-        
-        if message_ids:
-            # Test getting email details
-            first_email = gmail_client.get_message_details(message_ids[0])
-            if first_email:
-                print(f"✅ Email details retrieval working")
-                print(f"   Sample: {first_email.sender_email} - {first_email.subject[:50]}...")
-            else:
-                print("⚠️  Could not retrieve email details")
+            return True
         else:
-            print("ℹ️  No recent emails found (this might be normal)")
-        
+            print("❌ Could not retrieve user profile")
+            return False
+            
+    except Exception as error:
+        print(f"❌ Authentication failed: {error}")
+        return False
+
+def provide_next_steps(credentials_valid):
+    """Provide specific next steps based on current status."""
+    print("\n" + "="*60)
+    print("🔄 Next Steps")
+    print("="*60)
+    
+    if credentials_valid:
+        print("✅ Your credentials file is valid!")
+        print("🔄 Now testing authentication...")
     else:
-        print("❌ Authentication failed!")
-        gmail_client = None
+        print("❌ Credentials file is missing or invalid.")
+        print("\n📋 To fix this:")
+        print("1. Follow the setup instructions above")
+        print("2. Download your credentials.json from Google Cloud Console")
+        print("3. Place it in the credentials/ directory")
+        print("4. Run this script again: python misc/gmail_setup.py")
+        print("\n💡 Need help? Check the README.md file for detailed instructions.")
 
-except Exception as error:
-    print(f"❌ Error: {error}")
-    gmail_client = None
-
-
-# ==========================================
-# CELL 4: Initialize Email Analyzer
-# ==========================================
-
-if gmail_client:
-    print("\n📊 Initializing Email Analyzer...")
+def main():
+    """Main setup function."""
+    print_header()
     
-    try:
-        # Create analyzer
-        analyzer = EmailAnalyzer(gmail_client)
-        print("✅ Email analyzer ready!")
-        
-        # Set up some common date ranges for analysis
-        today = datetime.now()
-        date_ranges = {
-            "last_week": (today - timedelta(days=7), today),
-            "last_month": (today - timedelta(days=30), today),
-            "last_3_months": (today - timedelta(days=90), today),
-            "last_6_months": (today - timedelta(days=180), today),
-            "last_year": (today - timedelta(days=365), today),
-        }
-        
-        print("\n📅 Available date ranges for analysis:")
-        for name, (start, end) in date_ranges.items():
-            print(f"   {name}: {start.date()} to {end.date()}")
-        
-    except Exception as error:
-        print(f"❌ Analyzer initialization error: {error}")
-        analyzer = None
-else:
-    analyzer = None
-    print("\n❌ Cannot initialize analyzer without Gmail client")
-
-
-# ==========================================
-# CELL 5: Quick Analysis Function
-# ==========================================
-
-def quick_analysis(days=30, max_emails=500):
-    """
-    Run a quick Gmail analysis.
+    # Create credentials directory
+    create_credentials_directory()
     
-    Args:
-        days (int): Number of days to analyze
-        max_emails (int): Maximum emails to process
-    """
-    if not analyzer:
-        print("❌ Analyzer not available. Please fix authentication first.")
-        return None
+    # Check if credentials exist and are valid
+    credentials_valid, message = check_credentials()
     
-    print(f"\n🚀 Running quick analysis...")
-    print(f"📅 Date range: Last {days} days")
-    print(f"📧 Max emails: {max_emails}")
-    
-    try:
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=days)
-        
-        # Run analysis
-        report = analyzer.analyze_emails_from_date_range(
-            start_date=start_date,
-            end_date=end_date,
-            max_emails=max_emails,
-            batch_size=50
-        )
-        
-        # Display quick summary
-        print(f"\n✅ Analysis complete!")
-        print(f"📊 Emails analyzed: {report.total_emails_analyzed:,}")
-        print(f"👥 Unique senders: {len(report.sender_statistics)}")
-        print(f"💾 Total storage: {report.total_storage_used_bytes / (1024**2):.1f} MB")
-        
-        if report.sender_statistics:
-            print(f"\n🏆 Top 3 senders by email count:")
-            for i, sender in enumerate(report.get_top_senders_by_count(3), 1):
-                print(f"   {i}. {sender.sender_email}: {sender.total_emails} emails")
-        
-        return report
-        
-    except Exception as error:
-        print(f"❌ Analysis failed: {error}")
-        return None
+    if credentials_valid:
+        print("\n🔐 Testing authentication...")
+        if test_authentication():
+            print("\n" + "="*60)
+            print("🎉 GmailWiz Setup Complete!")
+            print("="*60)
+            print("\n✅ GmailWiz is now ready to use!")
+            print("\n📖 Example usage:")
+            print("   from gmaildr.core.gmail.main import Gmail")
+            print("   gmail = Gmail()")
+            print("   emails = gmail.get_emails(days=30)")
+            print("   print(f'Found {len(emails)} emails')")
+            print("\n🚀 Happy email analyzing!")
+            print("="*60)
+        else:
+            print("\n❌ Authentication test failed.")
+            print("Please check your credentials file and try again.")
+            provide_next_steps(False)
+    else:
+        show_setup_instructions()
+        provide_next_steps(False)
+        print("\n❌ Please complete the setup steps above and run this script again.")
 
-# Example usage
-print(f"\n💡 To run a quick analysis, use:")
-print(f"   report = quick_analysis(days=30, max_emails=200)")
-
-
-# ==========================================
-# CELL 6: Ready for Your Tasks!
-# ==========================================
-
-print(f"\n🎉 Gmail Cleaner Setup Complete!")
-print(f"=" * 40)
-
-if gmail_client and analyzer:
-    print(f"✅ Gmail client: Ready")
-    print(f"✅ Email analyzer: Ready")
-    print(f"✅ Configuration: Loaded")
-    
-    print(f"\n🚀 Available tools:")
-    print(f"   • gmail_client - for direct Gmail API access")
-    print(f"   • analyzer - for email analysis")
-    print(f"   • quick_analysis() - for fast analysis")
-    print(f"   • config_manager - for settings")
-    
-    print(f"\n📖 Example commands:")
-    print(f"   # Quick analysis")
-    print(f"   report = quick_analysis(days=90, max_emails=1000)")
-    print(f"   ")
-    print(f"   # Export to DataFrame")
-    print(f"   df = analyzer.export_to_dataframe()")
-    print(f"   ")
-    print(f"   # Get storage analysis")
-    print(f"   storage = analyzer.get_storage_analysis()")
-    print(f"   ")
-    print(f"   # Get temporal analysis")
-    print(f"   temporal = analyzer.get_temporal_analysis()")
-    
-    print(f"\n🎯 Ready for your Gmail analysis tasks!")
-    
-else:
-    print(f"❌ Setup incomplete. Please fix the issues above.")
-    if not gmail_client:
-        print(f"   • Gmail authentication failed")
-    if not analyzer:
-        print(f"   • Email analyzer not available")
-    
-    print(f"\n🔧 Next steps:")
-    print(f"   1. Enable Gmail API in Google Cloud Console")
-    print(f"   2. Ensure credentials.json is valid")
-    print(f"   3. Add yourself as test user in OAuth consent screen")
-    print(f"   4. Re-run this notebook")
-
-
-print(f"\n" + "="*50)
-print(f"📝 Gmail Cleaner Setup Notebook Complete")
-print(f"🕒 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-print(f"="*50)
+if __name__ == "__main__":
+    main()

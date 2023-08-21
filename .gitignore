@@ -54,6 +54,7 @@ env/
 credentials.json
 token.pickle
 gmail_cleaner_config.json
+credentials/
 
 # Output directories
 output/
@@ -81,6 +82,7 @@ docs/_build/
 .directory
 npm-debug.log*
 .cursorrules
+.cursorindexingignore
 .icommit_config.json
 *.pyd
 .DS_Store?

@@ -9,31 +9,34 @@ email management tasks.
 __version__ = "1.1.0"
 __author__ = "idin"
 
-from .core import Gmail, GmailClient, ConfigManager, setup_logging
+from .core import Gmail
+from .core.client.gmail_client import GmailClient
+from .core.config.config import ConfigManager, setup_logging
+from .core.models.email_message import EmailMessage
+from .core.models.sender import Sender
+from .data import EmailDataFrame
+from .data import SenderDataFrame
 from .analysis import (
-    EmailAnalyzer,
-    EmailContentAnalyzer,
-    analyze_email_text,
-    add_content_metrics_to_dataframe,
-    calculate_automated_email_score,
-    classify_email_types,
-    analyze_email_dataframe
+    analyze_email_content,
+    detect_language_safe,
+    is_english,
+    get_language_name,
+    process_metrics
 )
-from .models import EmailMessage, SenderStatistics, AnalysisReport
 
 __all__ = [
     "Gmail",
     "GmailClient",
     "ConfigManager",
     "setup_logging",
-    "EmailAnalyzer",
+    "EmailDataFrame",
+    "SenderDataFrame",
     "EmailMessage",
-    "SenderStatistics",
-    "AnalysisReport",
-    "EmailContentAnalyzer",
-    "analyze_email_text",
-    "add_content_metrics_to_dataframe",
-    "calculate_automated_email_score",
-    "classify_email_types",
-    "analyze_email_dataframe",
+    "Sender",
+
+    "analyze_email_content",
+    "detect_language_safe",
+    "is_english",
+    "get_language_name",
+    "process_metrics",
 ]

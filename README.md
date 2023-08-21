@@ -133,21 +133,118 @@ pip install gmaildr
 
 ## Quick Start
 
-### 1. Set Up Google API Credentials
+### 🚀 First-Time Setup
 
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select an existing one
-3. Enable the Gmail API
-4. Create OAuth2 credentials (Desktop application type)
-5. Download the credentials JSON file and save it as `credentials.json`
+GmailWiz requires Google OAuth2 credentials to access your Gmail account. We've made this process as simple as possible!
 
-### 2. Configure Gmail Cleaner
+#### Option 1: Automatic Setup (Recommended)
+
+Run our setup script to get guided through the entire process:
 
 ```bash
-gmaildr setup --credentials-file credentials.json
+python misc/gmail_setup.py
 ```
 
-### 3. Analyze Your Gmail
+This script will:
+- ✅ Create the necessary directories
+- 📋 Guide you through Google Cloud Console setup
+- 🔐 Test your authentication
+- 🎉 Confirm everything is working
+
+#### Option 2: Credentials Template Creator (For Beginners)
+
+If you're new to OAuth2 setup, start with our template creator:
+
+```bash
+python misc/create_credentials_template.py
+```
+
+This tool will:
+- 📝 Create a credentials file template
+- 📋 Show step-by-step setup instructions
+- 🔧 Help you get started with the right file structure
+
+#### Option 3: Diagnostic Tool (If You're Having Issues)
+
+If you're experiencing authentication problems, run our diagnostic tool:
+
+```bash
+python misc/gmail_diagnostic.py
+```
+
+This tool will:
+- 🔍 Check your credentials file validity
+- 📦 Verify all dependencies are installed
+- 🌐 Test network connectivity
+- 📧 Test Gmail API access
+- 💡 Provide specific recommendations for any issues found
+
+#### Option 2: Manual Setup
+
+If you prefer to set up manually:
+
+1. **Go to Google Cloud Console**
+   - Visit [https://console.cloud.google.com/](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+
+2. **Enable Gmail API**
+   - Go to "APIs & Services" > "Library"
+   - Search for "Gmail API"
+   - Click on it and press "Enable"
+
+3. **Create OAuth2 Credentials**
+   - Go to "APIs & Services" > "Credentials"
+   - Click "Create Credentials" > "OAuth 2.0 Client IDs"
+   - Choose "Desktop application" as the application type
+   - Give it a name (e.g., "GmailWiz")
+   - Click "Create"
+
+4. **Download Credentials**
+   - Click the download button (⬇️) next to your new OAuth2 client
+   - Save the JSON file as `credentials.json`
+
+5. **Place Credentials File**
+   - Create a `credentials` folder in your project root
+   - Move `credentials.json` to `credentials/credentials.json`
+
+### 🔐 First Authentication
+
+Once you have your credentials file in place:
+
+```python
+from gmaildr.core.gmail.main import Gmail
+
+# This will open a browser window for authentication
+gmail = Gmail()
+
+# Test that it works
+emails = gmail.get_emails(days=7)
+print(f"Found {len(emails)} emails in the last 7 days")
+```
+
+**Note:** The first time you run this, a browser window will open asking you to authorize GmailWiz. After authorization, your credentials will be saved and you won't need to authenticate again.
+
+### 🔧 Troubleshooting
+
+If you encounter authentication issues:
+
+1. **Run the diagnostic tool:**
+   ```bash
+   python misc/gmail_diagnostic.py
+   ```
+
+2. **Common solutions:**
+   - Delete token files: `rm credentials/token.*`
+   - Re-run setup: `python misc/gmail_setup.py`
+   - Check Gmail API is enabled in Google Cloud Console
+   - Verify your credentials.json file is valid
+
+3. **Still having issues?**
+   - Check the error messages for specific guidance
+   - Ensure you're using the correct Google account
+   - Try creating a new OAuth2 client in Google Cloud Console
+
+### 📊 Quick Analysis Examples
 
 ```bash
 # Analyze last 30 days
@@ -350,6 +447,97 @@ export GMAIL_CACHE_EXPIRY_HOURS=24
 - Hourly distribution
 - Day-of-week patterns
 - Peak usage identification
+
+### Analysis DataFrames for Machine Learning
+
+GmailDr provides analysis-ready DataFrames optimized for clustering and machine learning tasks. These DataFrames automatically include all available features with proper encoding for ML algorithms.
+
+#### EmailDataFrame Analysis
+
+```python
+from gmaildr import Gmail
+
+gmail = Gmail()
+
+# Get emails with text content and metrics
+emails = gmail.get_emails(
+    days=30,
+    include_text=True,
+    include_metrics=True
+)
+
+# Get analysis-ready DataFrame (auto-detects features)
+analysis_df = emails.analysis_dataframe
+print(f"Analysis DataFrame shape: {analysis_df.shape}")
+print(f"Features: {list(analysis_df.columns)}")
+
+# Get feature summary
+summary = emails.get_feature_summary()
+print(f"Total features: {summary['total_features']}")
+print(f"Numeric features: {summary['numeric_count']}")
+print(f"Periodic features: {summary['periodic_count']}")
+
+# Prepare for clustering (scales features)
+clustering_df = emails.prepare_for_clustering(scale_features=True)
+```
+
+**Features automatically included:**
+- **Temporal features**: Hour, day of week, month (with sin/cos encoding for cyclical patterns)
+- **Text features**: Word count, sentence count, capitalization ratio (when text content available)
+- **Analysis metrics**: Unsubscribe links, marketing language, external links, etc. (when text content available)
+- **Boolean features**: Has attachments, is read, is important
+- **Categorical features**: In folder (one-hot encoded)
+
+#### SenderDataFrame Analysis
+
+```python
+from gmaildr.sender_statistics import SenderDataFrame
+
+# Create sender statistics
+sender_df = SenderDataFrame(emails)
+
+# Get analysis-ready DataFrame
+sender_analysis_df = sender_df.analysis_dataframe
+print(f"Sender Analysis DataFrame shape: {sender_analysis_df.shape}")
+
+# Get feature summary
+sender_summary = sender_df.get_feature_summary()
+print(f"Sender features: {sender_summary['total_features']}")
+
+# Prepare for clustering
+sender_clustering_df = sender_df.prepare_for_clustering(scale_features=True)
+```
+
+**Features automatically included:**
+- **Volume metrics**: Total emails, emails per day, unique subjects
+- **Temporal patterns**: Time between emails, day/hour distributions
+- **Content analysis**: Subject/text lengths, language diversity
+- **Engagement metrics**: Read ratios, importance ratios, starred ratios
+- **Domain analysis**: Corporate vs personal domains, role-based detection
+
+#### Advanced Usage
+
+```python
+# Manual control over analysis parameters
+analysis_df = emails.create_analysis_dataframe(drop_na_threshold=0.3)
+
+# Custom clustering preparation
+clustering_df = emails.prepare_for_clustering(
+    scale_features=True,
+    remove_outliers=True,
+    outlier_threshold=2.5
+)
+
+# Use with scikit-learn
+from sklearn.cluster import KMeans
+
+# Cluster emails
+kmeans = KMeans(n_clusters=5, random_state=42)
+clusters = kmeans.fit_predict(clustering_df)
+
+# Add cluster assignments back to original DataFrame
+emails['cluster'] = clusters
+```
 
 ## Output Formats
 

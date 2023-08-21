@@ -132,7 +132,13 @@ def _count_pattern(text: str, pattern: str) -> int:
 def count_patterns(text: str, patterns: Union[str, List[str]]) -> int:
     """
     Match a list (or single) of patterns against a text.
-    Returns the sum of counts for each pattern.
+    
+    Args:
+        text: Text to search in
+        patterns: Pattern(s) to search for
+        
+    Returns:
+        Sum of counts for each pattern
     """
     if isinstance(patterns, str):
         patterns = [patterns]
@@ -141,7 +147,13 @@ def count_patterns(text: str, patterns: Union[str, List[str]]) -> int:
 def match_patterns(text: str, patterns: Union[str, List[str]]) -> bool:
     """
     Match a list (or single) of patterns against a text.
-    Returns True if any pattern matches.
+    
+    Args:
+        text: Text to search in
+        patterns: Pattern(s) to search for
+        
+    Returns:
+        True if any pattern matches, False otherwise
     """
     if isinstance(patterns, str):
         patterns = [patterns]

@@ -9,9 +9,10 @@ __version__ = "1.1.0"
 __author__ = "idin"
 
 # Import main functions
-from .clustering import find_optimal_clusters, cluster_emails
+from .clustering import find_optimal_k
+from .clustering import cluster
 
 __all__ = [
-    "find_optimal_clusters",
-    "cluster_emails",
+    "find_optimal_k",
+    "cluster",
 ]

@@ -52,8 +52,8 @@ def test_gmaildr_imports():
     """Test that gmaildr modules can be imported."""
     try:
         from gmaildr import Gmail
-        from gmaildr.analysis import HumanEmailDetector
-        from gmaildr.core import GmailClient
+        from gmaildr.analysis import analyze_email_content
+        from gmaildr.core.client.gmail_client import GmailClient
         print("✅ All gmaildr modules import successfully")
     except ImportError as e:
         assert False, f"Failed to import gmaildr modules: {e}"

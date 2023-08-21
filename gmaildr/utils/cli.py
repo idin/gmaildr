@@ -15,22 +15,21 @@ from typing import Optional
 import click
 from rich.console import Console
 from rich.table import Table
-from rich.progress import track
-from rich.panel import Panel
-from rich import print as rich_print
 
-from ..core.gmail_client import GmailClient
-from ..analysis.email_analyzer import EmailAnalyzer
-from ..core.config import ConfigManager, setup_logging
-from ..models import AnalysisReport
+from ..core.client.gmail_client import GmailClient
+
+from ..core.config.config import ConfigManager, setup_logging
+
 
 console = Console()
 
 
 @click.group()
-@click.option('--config-file', 
-              default='gmail_cleaner_config.json',
-              help='Path to configuration file')
+@click.option(
+    '--config-file', 
+    default='gmail_cleaner_config.json',
+    help='Path to configuration file'
+)
 @click.option('--verbose', '-v', 
               is_flag=True, 
               help='Enable verbose logging')
@@ -41,6 +40,11 @@ def cli(ctx: click.Context, config_file: str, verbose: bool):
     
     This tool helps you understand your email patterns, identify top senders,
     manage your Gmail storage, and automate email operations.
+    
+    Args:
+        ctx: Click context object
+        config_file: Path to configuration file
+        verbose: Enable verbose logging
     """
     # Initialize configuration
     config_manager = ConfigManager(config_file=config_file)
@@ -65,6 +69,10 @@ def setup(ctx: click.Context, credentials_file: Optional[str]):
     
     This command helps you configure the tool with your Gmail API credentials
     and test the connection to ensure everything is working properly.
+    
+    Args:
+        ctx: Click context object
+        credentials_file: Path to Google OAuth2 credentials JSON file
     """
     config_manager = ctx.obj['config_manager']
     config = config_manager.get_config()
@@ -156,6 +164,14 @@ def analyze(
     
     This command fetches emails from your Gmail inbox, analyzes sender patterns,
     and generates comprehensive statistics about your email usage.
+    
+    Args:
+        ctx: Click context object
+        days: Number of days to analyze
+        max_emails: Maximum number of emails to analyze
+        output: Output file path
+        output_format: Output format (json, csv, excel)
+        no_cache: Disable caching of email data
     """
     config_manager = ctx.obj['config_manager']
     config = config_manager.get_config()
@@ -190,20 +206,12 @@ def analyze(
     start_date = end_date - timedelta(days=days)
     
     # Initialize analyzer
-    analyzer = EmailAnalyzer(gmail_client)
+    
     
     try:
-        # Run analysis
-        with console.status("[bold green]Fetching and analyzing emails..."):
-            report = analyzer.analyze_emails_from_date_range(
-                start_date=start_date,
-                end_date=end_date,
-                max_emails=max_emails or config.default_max_emails,
-                batch_size=config.default_batch_size
-            )
+
         
-        # Display results
-        _display_analysis_results(report)
+
         
         # Save results
         if output:
@@ -213,8 +221,7 @@ def analyze(
             filename = f"gmail_analysis_{timestamp}.{output_format}"
             output_path = config_manager.get_output_path(filename)
         
-        _save_analysis_results(report, output_path, output_format, analyzer)
-        console.print(f"\n[green]✓[/green] Results saved to: {output_path}")
+
         
     except Exception as error:
         console.print(f"[red]Analysis failed: {error}[/red]")
@@ -234,6 +241,11 @@ def top_senders(ctx: click.Context, sender: Optional[str], limit: int):
     
     This command provides a quick overview of your most active email senders
     without performing a full analysis.
+    
+    Args:
+        ctx: Click context object
+        sender: Filter by specific sender email
+        limit: Number of top senders to show
     """
     config_manager = ctx.obj['config_manager']
     config = config_manager.get_config()
@@ -251,6 +263,9 @@ def status(ctx: click.Context):
     
     This command displays the current configuration, authentication status,
     and any cached analysis data information.
+    
+    Args:
+        ctx: Click context object
     """
     config_manager = ctx.obj['config_manager']
     config = config_manager.get_config()
@@ -287,7 +302,7 @@ def status(ctx: click.Context):
         console.print("[yellow]![/yellow] No authentication token (run setup)")
 
 
-def _display_analysis_results(report: AnalysisReport) -> None:
+def _display_analysis_results(report) -> None:
     """Display analysis results in the console."""
     console.print(f"\n[bold green]Analysis Complete![/bold green]")
     console.print(f"Analyzed {report.total_emails_analyzed:,} emails")
@@ -333,10 +348,10 @@ def _display_analysis_results(report: AnalysisReport) -> None:
 
 
 def _save_analysis_results(
-    report: AnalysisReport,
+    report,
     output_path: str,
     output_format: str,
-    analyzer: EmailAnalyzer
+    analyzer
 ) -> None:
     """Save analysis results to file."""
     if output_format == 'json':

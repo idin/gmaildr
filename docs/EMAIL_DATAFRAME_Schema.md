@@ -13,8 +13,11 @@ This document describes the complete schema of EmailDataFrame objects returned b
 | `message_id` | `str` | Unique Gmail message ID | `"18c1234567890abc"` |
 | `sender_email` | `str` | Sender's email address | `"sender@example.com"` |
 | `sender_name` | `str` or `None` | Sender's display name | `"John Doe"` or `None` |
+| `recipient_email` | `str` | Recipient's email address | `"user@gmail.com"` |
+| `recipient_name` | `str` or `None` | Recipient's display name | `"User"` or `None` |
 | `subject` | `str` | Email subject line | `"Meeting tomorrow"` |
-| `date` | `datetime` | Email received date/time | `2024-01-15 10:30:00` |
+| `timestamp` | `datetime` | Email received date/time (UTC) | `2024-01-15 10:30:00` |
+| `sender_local_timestamp` | `datetime` | Sender's local timestamp | `2024-01-15 10:30:00` |
 
 ### Size Information
 
@@ -30,6 +33,8 @@ This document describes the complete schema of EmailDataFrame objects returned b
 | `has_attachments` | `bool` | Whether email has attachments | `True` |
 | `is_read` | `bool` | Whether email has been read | `False` |
 | `is_important` | `bool` | Whether Gmail marked as important | `True` |
+| `is_starred` | `bool` | Whether email is starred | `True` |
+| `is_forwarded` | `bool` | Whether email is forwarded | `False` |
 | `in_folder` | `str` | Current folder location | `"inbox"` |
 
 ### Metadata
@@ -50,12 +55,26 @@ This document describes the complete schema of EmailDataFrame objects returned b
 | `hour` | `int` | Hour email was received | `10` |
 | `day_of_week` | `str` | Day of week email was received | `"Monday"` |
 
+### Language Detection
+
+| Column | Type | Description | Example |
+|--------|------|-------------|---------|
+| `subject_language` | `str` or `None` | Detected language of subject | `"en"` or `None` |
+| `subject_language_confidence` | `float` or `None` | Confidence score for subject language | `0.95` or `None` |
+| `text_language` | `str` or `None` | Detected language of text content | `"en"` or `None` |
+| `text_language_confidence` | `float` or `None` | Confidence score for text language | `0.92` or `None` |
+
+### Email Classification
+
+| Column | Type | Description | Example |
+|--------|------|-------------|---------|
+| `has_role_based_email` | `bool` | Whether sender email is role-based/automated | `True` |
+
 ### Optional Columns (Conditional)
 
 | Column | Type | Description | When Available |
 |--------|------|-------------|----------------|
 | `text_content` | `str` | Full email body text | When `include_text=True` |
-| `in_reply_to` | `str` | Message ID this email replies to | When available in headers |
 | `cluster` | `int` | Cluster assignment | After running clustering |
 
 ## Extended Schema (with Metrics)
@@ -99,23 +118,45 @@ When `include_metrics=True` and `include_text=True`, additional columns are adde
 ## Data Types Summary
 
 ### String Columns
-- `message_id`, `sender_email`, `sender_name`, `subject`, `snippet`, `thread_id`, `day_of_week`, `in_folder`
-- `text_content` (optional), `in_reply_to` (optional)
+- `message_id`, `sender_email`, `sender_name`, `recipient_email`, `recipient_name`, `subject`, `snippet`, `thread_id`, `day_of_week`, `in_folder`
+- `text_content` (optional), `subject_language`, `text_language`
 
 ### Numeric Columns
 - `size_bytes` (int), `size_kb` (float)
 - `year`, `month`, `day`, `hour` (int)
+- `subject_language_confidence`, `text_language_confidence` (float)
 - All metrics columns (float/int)
 
 ### Boolean Columns
-- `has_attachments`, `is_read`, `is_important`
+- `has_attachments`, `is_read`, `is_important`, `is_starred`, `is_forwarded`, `has_role_based_email`
 - `is_human_sender` (optional)
 
 ### List Columns
 - `labels` (List[str])
 
 ### Datetime Columns
-- `date` (datetime)
+- `timestamp` (datetime), `sender_local_timestamp` (datetime)
+
+## Role-Based Email Detection
+
+The system automatically detects role-based (automated) email addresses using a predefined list of role words:
+
+- **Admin/Support**: `admin`, `info`, `support`, `sales`, `billing`, `help`, `contact`
+- **Business**: `office`, `jobs`, `careers`, `press`, `webmaster`, `postmaster`
+- **Technical**: `noc`, `security`, `privacy`, `legal`
+- **Marketing**: `marketing`, `newsletter`, `newsletters`, `news`
+- **Communication**: `team`, `hello`, `hi`, `service`, `services`
+- **HR/Finance**: `hr`, `ops`, `accounts`, `accounting`, `finance`, `payroll`
+- **Partnerships**: `partners`, `partner`, `affiliate`
+- **Customer Service**: `care`, `cs`, `cx`, `success`
+
+## Language Detection
+
+The system automatically detects the language of both email subjects and text content using language detection algorithms:
+
+- **Subject Language**: Detected from the email subject line
+- **Text Language**: Detected from the full email body text (when available)
+- **Confidence Scores**: Range from 0.0 to 1.0, indicating detection confidence
 
 ## Usage Examples
 
@@ -130,7 +171,7 @@ emails = gmail.get_emails(days=30)
 print(emails.columns.tolist())
 
 # Access basic email data
-print(emails[['message_id', 'sender_email', 'subject', 'date']].head())
+print(emails[['message_id', 'sender_email', 'subject', 'timestamp']].head())
 ```
 
 ### With Text Content
@@ -152,6 +193,21 @@ emails_with_metrics = gmail.get_emails(
 # Check human detection
 human_emails = emails_with_metrics[emails_with_metrics['is_human_sender'] == True]
 print(f"Found {len(human_emails)} human emails")
+
+# Check role-based emails
+role_emails = emails_with_metrics[emails_with_metrics['has_role_based_email'] == True]
+print(f"Found {len(role_emails)} role-based emails")
+```
+
+### Language Analysis
+```python
+# Check language distribution
+language_stats = emails.groupby('subject_language').size()
+print("Subject languages:", language_stats)
+
+# Check high-confidence language detections
+high_conf = emails[emails['subject_language_confidence'] > 0.9]
+print(f"High confidence detections: {len(high_conf)}")
 ```
 
 ### After Clustering
@@ -181,3 +237,5 @@ EmailDataFrame validates that:
 - **Size Calculations**: Size columns are calculated from `size_bytes`
 - **Label Format**: Labels are Gmail's internal label IDs (e.g., "INBOX", "IMPORTANT")
 - **Thread ID**: Same as message_id for single emails, different for thread members
+- **Role Detection**: Based on sender email local part (before @)
+- **Language Detection**: Uses confidence scores to indicate detection reliability

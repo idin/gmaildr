@@ -6,7 +6,7 @@ cached email retrieval and storage.
 """
 
 import logging
-from typing import List, Dict, Any, Optional, Set, Literal, Union
+from typing import List, Dict, Any, Optional, Set, Literal
 from datetime import datetime, timedelta
 import pandas as pd
 
@@ -15,10 +15,9 @@ from .file_storage import EmailFileStorage
 from .schema_manager import EmailSchemaManager
 from .index_manager import EmailIndexManager
 from ..utils.progress import EmailProgressTracker
-from ..utils.query_builder import build_gmail_search_query
 from ..core.gmail import Gmail
-from ..models import EmailMessage
-from ..analysis.metrics_service import MetricsService
+from ..analysis import process_metrics
+
 
 logger = logging.getLogger(__name__)
 
@@ -77,9 +76,9 @@ class EmailCacheManager:
         log_method = getattr(logger, level.lower(), logger.info)
         log_method(message)
         
-        # Print to console if verbose
+        # Log if verbose
         if self.verbose:
-            print(message)
+            logger.info(message)
     
     def get_emails_with_cache(
         self, *,
@@ -106,17 +105,27 @@ class EmailCacheManager:
         Get emails with intelligent caching.
         
         Args:
-            gmail_client: GmailClient instance.
-            days: Number of days to retrieve.
-            max_emails: Maximum number of emails to retrieve.
-            include_text: Whether to include email text content.
-            include_metrics: Whether to include content analysis metrics.
-            use_batch: Whether to use batch processing.
-            parallelize_text_fetch: Whether to parallelize text extraction.
-            **filters: Additional email filters.
+            gmail_client: GmailClient instance
+            gmail_instance: Gmail instance for operations
+            days: Number of days to retrieve
+            start_date: Start date for search range
+            end_date: End date for search range
+            max_emails: Maximum number of emails to retrieve
+            from_sender: Filter by sender email address(es)
+            subject_contains: Filter by text in subject line
+            subject_does_not_contain: Filter by text not in subject line
+            has_attachment: Filter by attachment presence
+            is_unread: Filter by read/unread status
+            is_important: Filter by importance
+            in_folder: Filter by folder
+            is_starred: Filter by starred status
+            include_text: Whether to include email text content
+            include_metrics: Whether to include content analysis metrics
+            use_batch: Whether to use batch processing
+            parallelize_text_fetch: Whether to parallelize text extraction
             
         Returns:
-            DataFrame with email data.
+            DataFrame with email data
         """
         if not self.config.enable_cache:
             # Fall back to direct API calls
@@ -139,8 +148,17 @@ class EmailCacheManager:
             )
         
         # Calculate date range
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=days)
+        if start_date is not None and end_date is not None:
+            # Use provided start_date and end_date
+            pass
+        elif days is not None:
+            # Calculate from days
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=days)
+        else:
+            # Default to 30 days if nothing provided
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=30)
         
         # Build query for fresh message IDs using shared utility
         from ..utils.query_builder import build_gmail_search_query
@@ -215,7 +233,7 @@ class EmailCacheManager:
         # Add metrics if requested
         if include_metrics and include_text:
             
-            df = MetricsService.process_metrics(
+            df = process_metrics(
                 df=df, 
                 include_metrics=include_metrics, 
                 include_text=include_text, 
@@ -269,7 +287,6 @@ class EmailCacheManager:
                             continue
                         
                         # Convert to email object
-                        from ..models import EmailMessage
                         email_obj = self._dict_to_email_object(email_data=email_data)
                         cached_emails.append(email_obj)
                 else:
@@ -375,7 +392,7 @@ class EmailCacheManager:
         Returns:
             EmailMessage object.
         """
-        from ..models import EmailMessage
+        from ..core.models.email_message import EmailMessage
         
         # Parse timestamp
         if isinstance(email_data['timestamp'], str):
@@ -401,18 +418,20 @@ class EmailCacheManager:
         return EmailMessage(
             message_id=email_data['message_id'],
             sender_email=email_data['sender_email'],
-            sender_name=email_data.get('sender_name', ''),
+            recipient_email=email_data['recipient_email'],
             subject=email_data['subject'],
             timestamp=timestamp,
             sender_local_timestamp=sender_local_timestamp,
             size_bytes=email_data['size_bytes'],
+            sender_name=email_data['sender_name'],
+            recipient_name=email_data['recipient_name'],
             labels=labels,
-            thread_id=email_data.get('thread_id', ''),
-            snippet=email_data.get('snippet', ''),
-            has_attachments=email_data.get('has_attachments', False),
-            is_read=email_data.get('is_read', True),
-            is_important=email_data.get('is_important', False),
-            text_content=email_data.get('text_content', None)
+            thread_id=email_data['thread_id'],
+            snippet=email_data['snippet'],
+            has_attachments=email_data['has_attachments'],
+            is_read=email_data['is_read'],
+            is_important=email_data['is_important'],
+            text_content=email_data['text_content']
         )
     
     def _email_object_to_dict(self, email: Any) -> Dict[str, Any]:
@@ -429,6 +448,8 @@ class EmailCacheManager:
             'message_id': email.message_id,
             'sender_email': email.sender_email,
             'sender_name': email.sender_name,
+            'recipient_email': email.recipient_email,
+            'recipient_name': email.recipient_name,
             'subject': email.subject,
             'timestamp': email.timestamp.isoformat(),
             'sender_local_timestamp': email.sender_local_timestamp.isoformat(),
@@ -492,7 +513,7 @@ class EmailCacheManager:
         
         # Add metrics if requested
         if include_metrics and include_text:
-            df = MetricsService.process_metrics(
+            df = process_metrics(
                 df=df, 
                 include_metrics=include_metrics, 
                 include_text=include_text, 
@@ -590,24 +611,43 @@ class EmailCacheManager:
         
         return deleted_count
     
-    def invalidate_cache(self) -> bool:
+    def invalidate_cache(self, message_ids: Optional[List[str]] = None) -> bool:
         """
-        Invalidate entire cache (delete all cached data).
+        Invalidate cache - either entire cache or specific message IDs.
+        
+        Args:
+            message_ids: List of specific message IDs to invalidate.
+                        If None, invalidates entire cache.
         
         Returns:
             True if successful, False otherwise.
         """
         try:
-            import shutil
+            if message_ids is None:
+                # Invalidate entire cache
+                import shutil
+                
+                # Remove cache directory
+                if self.config.cache_dir.exists():
+                    shutil.rmtree(self.config.cache_dir)
+                
+                # Recreate directories
+                self.config._ensure_cache_directories()
+                
+                self._log_with_verbosity("Cache invalidated successfully")
+            else:
+                # Invalidate specific message IDs
+                invalidated_count = 0
+                for message_id in message_ids:
+                    if self.file_storage.delete_email_by_id(message_id=message_id):
+                        invalidated_count += 1
+                
+                # Rebuild indexes after selective invalidation
+                if invalidated_count > 0:
+                    self.index_manager.build_indexes()
+                
+                self._log_with_verbosity(f"Invalidated {invalidated_count} specific emails from cache")
             
-            # Remove cache directory
-            if self.config.cache_dir.exists():
-                shutil.rmtree(self.config.cache_dir)
-            
-            # Recreate directories
-            self.config._ensure_cache_directories()
-            
-            self._log_with_verbosity("Cache invalidated successfully")
             return True
             
         except Exception as error:

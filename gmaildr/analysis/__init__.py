@@ -1,37 +1,21 @@
 """
 Analysis module for GmailDr.
 
-This module contains email analysis and metrics functionality.
+This module provides comprehensive email analysis capabilities including:
+- Human email detection
+- Content analysis
+- Language detection
+- Metrics processing
 """
 
-from .email_analyzer import EmailAnalyzer
-from .email_metrics import EmailMetrics, EmailContentAnalyzer, analyze_email_text
-from .metrics_processor import (
-    add_content_metrics_to_dataframe,
-    add_content_metrics_to_dataframe_parallel,
-    calculate_automated_email_score,
-    classify_email_types,
-    analyze_email_dataframe
-)
-from .human_email_detector import (
-    HumanEmailDetector,
-    HumanEmailScore,
-    detect_human_emails,
-    get_human_sender_summary
-)
+from .analyze_email_content import analyze_email_content
+from .language_detector import detect_language_safe, is_english, get_language_name
+from .metrics_service import process_metrics
 
 __all__ = [
-    'EmailAnalyzer', 
-    'EmailMetrics', 
-    'EmailContentAnalyzer',
-    'analyze_email_text',
-    'add_content_metrics_to_dataframe',
-    'add_content_metrics_to_dataframe_parallel',
-    'calculate_automated_email_score',
-    'classify_email_types',
-    'analyze_email_dataframe',
-    'HumanEmailDetector',
-    'HumanEmailScore',
-    'detect_human_emails',
-    'get_human_sender_summary'
+    'analyze_email_content',
+    'detect_language_safe',
+    'is_english',
+    'get_language_name',
+    'process_metrics'
 ]
