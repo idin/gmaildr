@@ -11,7 +11,6 @@ from ...analysis.language_detector import detect_language_safe
 from ...utils.query_builder import build_gmail_search_query
 from ...utils.progress import EmailProgressTracker
 from ..config.config import ROLE_WORDS
-from ...data.email_dataframe.email_dataframe import EmailDataFrame
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ class EmailOperator(CachedGmail):
         include_metrics: bool = False,
         use_batch: bool = True,
         parallelize_text_fetch: bool = False
-    ) -> EmailDataFrame:
+    ) -> pd.DataFrame:
         """
         Get emails as a pandas DataFrame with filtering options.
         
@@ -104,12 +103,10 @@ class EmailOperator(CachedGmail):
         message_ids = self.client.search_messages(query=query, max_results=max_emails)
         
         if not message_ids:
-            from ...data.email_dataframe.email_dataframe import EmailDataFrame
-            return EmailDataFrame.create_empty(gmail=self)
+            return pd.DataFrame()  # Return empty pandas DataFrame instead of EmailDataFrame
         
         # Use cache manager if available, otherwise fall back to direct API calls
         if self.cache_manager:
-            from ...data.email_dataframe.email_dataframe import EmailDataFrame
             df = self.cache_manager.get_emails_with_cache(
                 gmail_client=self.client,
                 gmail_instance=self,
@@ -130,9 +127,7 @@ class EmailOperator(CachedGmail):
                 in_folder=in_folder,
                 is_starred=is_starred
             )
-            # Convert to EmailDataFrame if it's not already
-            if not isinstance(df, EmailDataFrame):
-                return EmailDataFrame(data=df, gmail=self)
+            # Return the DataFrame directly (it's already a pandas DataFrame)
             return df
         else:
             # Fall back to direct API calls (original implementation)
@@ -144,8 +139,7 @@ class EmailOperator(CachedGmail):
             except KeyboardInterrupt:
                 logger.warning("Email retrieval interrupted by user. Returning partial results...")
                 if not emails:
-                    from ...data.email_dataframe.email_dataframe import EmailDataFrame
-                    return EmailDataFrame.create_empty(gmail=self)
+                    return pd.DataFrame()  # Return empty pandas DataFrame
             
             # Validate include_metrics requires include_text
             if include_metrics and not include_text:
@@ -158,16 +152,8 @@ class EmailOperator(CachedGmail):
             # Convert to DataFrame (main progress bar should complete here)
             df = self._emails_to_dataframe(emails=emails, include_text=include_text)
             
-            # Convert to EmailDataFrame for email-specific functionality
-            from gmaildr.data.email_dataframe.email_dataframe import EmailDataFrame
-            email_df = EmailDataFrame(df, gmail=None)  # gmail parameter is optional
-            
-            # Add content analysis metrics if requested (separate process)
-            if include_metrics and include_text:
-                # TODO: Implement metrics processing
-                pass
-            
-            return email_df
+            # Return the pandas DataFrame directly
+            return df
     
     def _add_email_text(self, emails: List, parallelize: bool = False) -> List:
         """

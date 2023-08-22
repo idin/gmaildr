@@ -131,8 +131,7 @@ class EmailProcessing(GmailSizer):
             DataFrame containing email data.
         """
         if not emails:
-            from ..email_dataframe import EmailDataFrame
-            return EmailDataFrame()
+            return pd.DataFrame()  # Return empty pandas DataFrame
         
         # Convert emails to dictionaries
         data = []
@@ -140,12 +139,8 @@ class EmailProcessing(GmailSizer):
             email_dict = email.to_dict(include_text=include_text)
             data.append(email_dict)
         
-        # Create DataFrame
-        df = pd.DataFrame(data)
-        
-        # Convert to EmailDataFrame
-        from ..email_dataframe import EmailDataFrame
-        return EmailDataFrame(df)
+        # Create and return pandas DataFrame directly
+        return pd.DataFrame(data)
     
     def add_language_detection(self, emails: List, include_text: bool = False) -> List:
         """

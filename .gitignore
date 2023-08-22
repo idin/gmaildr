@@ -1,24 +1,54 @@
-# Project specific
+# =============================================================================
+# PROJECT-SPECIFIC UNTRACKED FOLDERS (🚫 in project structure)
+# =============================================================================
+
+# Development documentation and AI collaboration
+memory-bank/
+.documents/
+
+# Experimental work and testing
+.playground/
+.ipynb_checkpoints/
+
+# IDE and editor configuration
+.cursor/
+.vscode/
+.idea/
+.specstory/
+
+# =============================================================================
+# PROJECT SPECIFIC
+# =============================================================================
+
+# Gmail-specific files
 jupyter_test.py
 jupyter_t.py
-*.ipynb
 token.pickle
 credentials.json
-cache/
-vscode/
-.ipynb_checkpoints/
+gmail_cleaner_config.json
+credentials/
 
 # Debug and development files
 EMAIL_DATAFRAME_CHANGES_LOG.md
 tests/core/debug/
-*.debug.md
 
+# Analysis results
+gmail_analysis_*.json
 
-# Python
+# =============================================================================
+# PYTHON
+# =============================================================================
+
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyd
+*.pyc
+*.pyo
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -43,55 +73,91 @@ ENV/
 env/
 .venv/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# =============================================================================
+# JUPYTER NOTEBOOKS
+# =============================================================================
 
-# Gmail Cleaner specific
-credentials.json
-token.pickle
-gmail_cleaner_config.json
-credentials/
+# Jupyter notebook files (keep in .playground/ only)
+*.ipynb
 
-# Output directories
-output/
-cache/
-*.log
+# Jupyter checkpoints
+.ipynb_checkpoints/
 
-# Analysis results
-*.xlsx
-*.csv
-gmail_analysis_*.json
+# =============================================================================
+# TESTING
+# =============================================================================
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Testing
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
+.cache/
 
-# Documentation
-docs/_build/
+# =============================================================================
+# DEVELOPMENT TOOLS
+# =============================================================================
 
-.directory
-npm-debug.log*
+# Cursor IDE
 .cursorrules
 .cursorindexingignore
+
+# icommit configuration
 .icommit_config.json
-*.pyd
-.DS_Store?
-node_modules/
-*.tmp
+
+# Vim
 .vim/
-*.pyo
-.cache/
-*.pyc
-.env
+*.swp
+*.swo
+*~
+
+# =============================================================================
+# OUTPUT AND TEMPORARY FILES
+# =============================================================================
+
+# Logs
+*.log
 logs/
+npm-debug.log*
+
+# Cache directories
+cache/
+
+# Temporary files
+*.tmp
 *.temp
+*.debug.md
+
+# Data files (keep in .playground/ for experiments)
+*.xlsx
+*.csv
+
+# Output directories
+output/
+
+# =============================================================================
+# OPERATING SYSTEM
+# =============================================================================
+
+# macOS
+.DS_Store
+.DS_Store?
+.directory
+
+# Windows
+Thumbs.db
+
+# =============================================================================
+# DOCUMENTATION BUILD
+# =============================================================================
+
+docs/_build/
+
+# =============================================================================
+# ENVIRONMENT AND CONFIGURATION
+# =============================================================================
+
+# Environment variables
+.env
+
+# Node modules (if any)
+node_modules/
