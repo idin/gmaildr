@@ -6,7 +6,7 @@ text patterns in email content.
 """
 
 from typing import Optional
-from gmaildr.utils import match_patterns
+from ..utils import match_patterns
 
 
 def email_has_unsubscribe_link(text: str, html_content: Optional[str] = None) -> bool:

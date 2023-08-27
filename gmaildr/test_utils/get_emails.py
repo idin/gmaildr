@@ -5,7 +5,7 @@ Test utilities - shared helper functions for all tests.
 from datetime import datetime, timedelta
 from typing import List, Optional
 from gmaildr import Gmail
-from gmaildr.core.models.email_message import EmailMessage
+from ..core.models.email_message import EmailMessage
 import pandas as pd
 
 
