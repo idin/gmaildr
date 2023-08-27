@@ -225,6 +225,16 @@ class EmailCacheManager:
             gmail_instance = Gmail()
         df = gmail_instance._emails_to_dataframe(emails=all_emails, include_text=include_text)
         
+        # CRITICAL FIX: Apply folder filter to cached results
+        # The cache returns emails based on date range, but doesn't know about folder moves
+        # This post-filter ensures cached emails match the requested folder
+        if in_folder is not None and not df.empty:
+            original_count = len(df)
+            df = df[df['in_folder'] == in_folder]
+            filtered_count = len(df)
+            if original_count != filtered_count:
+                self._log_with_verbosity(f"Folder filter: removed {original_count - filtered_count} cached emails not in '{in_folder}' folder")
+        
         # Apply max_emails limit to final result if specified
         if max_emails is not None and len(df) > max_emails:
             df = df.head(max_emails)
