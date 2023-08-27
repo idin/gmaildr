@@ -1,11 +1,5 @@
-from .gmail_dataframe import GmailDataFrame
-from .email_dataframe import EmailDataFrame, Email_ML_DataFrame
-from .sender_dataframe import SenderDataFrame, Sender_ML_DataFrame
+# Data module - now simplified to use standard pandas DataFrames
+# Custom DataFrame classes have been removed in favor of standard pandas DataFrames
+# All Gmail functionality now returns pd.DataFrame objects
 
-__all__ = [
-    'GmailDataFrame',
-    'EmailDataFrame',
-    'Email_ML_DataFrame',
-    'SenderDataFrame',
-    'Sender_ML_DataFrame',
-]
+__all__ = []

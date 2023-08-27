@@ -91,12 +91,27 @@ def build_gmail_search_query(
     elif is_important is False:
         query_parts.append("-is:important")
     
-    # Folder filter
+    # Folder filter - match the folder detection logic in determine_folder()
     if in_folder:
-        if in_folder == 'archive':
-            query_parts.append("-in:inbox")  # Archive means not in inbox
-        else:
-            query_parts.append(f"in:{in_folder}")
+        # CRITICAL FIX: These precise Gmail API queries fixed intermittent folder operation test failures.
+        # Previously, we had imprecise queries that returned wrong emails, causing tests to fail.
+        # This led us to initially hypothesize Gmail API timing issues (which we tested and proved WRONG).
+        # The real issue was imprecise query construction. See docs/gmail_api_timing_investigation.md
+        
+        if in_folder == 'inbox':
+            # Inbox: has INBOX label but not SENT, DRAFT, SPAM, or TRASH
+            query_parts.append("in:inbox -in:sent -in:drafts -in:spam -in:trash")
+        elif in_folder == 'sent':
+            query_parts.append("in:sent")
+        elif in_folder == 'drafts':
+            query_parts.append("in:drafts")
+        elif in_folder == 'spam':
+            query_parts.append("in:spam")
+        elif in_folder == 'trash':
+            query_parts.append("in:trash")
+        elif in_folder == 'archive':
+            # Archive: not in any folder (no INBOX, SENT, DRAFT, SPAM, or TRASH labels)
+            query_parts.append("-in:inbox -in:sent -in:drafts -in:spam -in:trash")
     
     # Starred filter
     if is_starred is True:

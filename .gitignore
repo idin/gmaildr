@@ -6,6 +6,8 @@
 memory-bank/
 .documents/
 
+
+
 # Experimental work and testing
 .playground/
 .ipynb_checkpoints/

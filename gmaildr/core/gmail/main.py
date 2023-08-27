@@ -75,6 +75,7 @@ class Gmail(EmailAnalyzer):
             enable_cache (bool): Whether to enable email caching.
             verbose (bool): Whether to show detailed cache and processing messages.
         """
+        
         # Initialize base class (authentication, client, and cache)
         super().__init__(
             credentials_file=credentials_file, 
@@ -87,6 +88,8 @@ class Gmail(EmailAnalyzer):
         self.config_manager = ConfigManager()
         self.config = self.config_manager.get_config()
         setup_logging(self.config, verbose=verbose)
+    
+
         
         # Update client with proper token file from config
         self.client.token_file = self.config.token_file
@@ -95,41 +98,37 @@ class Gmail(EmailAnalyzer):
     # EMAIL MODIFICATION METHODS (Convenience wrappers around client methods)
     # ============================================================================
     
-    def move_to_trash(self, message_ids: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
+    def move_to_trash(self, emails: Union[str, List[str], pd.DataFrame], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
         """
         Move emails to trash (add TRASH label and remove other folder labels).
         
         Args:
-            message_ids: Single message ID or list of message IDs
+            emails: Single message ID, list of message IDs, or DataFrame with 'message_id' column
             show_progress: Whether to show progress bar
             
         Returns:
             bool or Dict[str, bool]: Success status
         """
-        if isinstance(message_ids, str):
-            message_ids = [message_ids]
         return self.modify_labels(
-            message_ids=message_ids,
+            emails=emails,
             add_labels=['TRASH'],
             remove_labels=list(self.FOLDER_LABELS - {'TRASH'}),
             show_progress=show_progress
         )
     
-    def move_to_inbox(self, message_ids: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
+    def move_to_inbox(self, emails: Union[str, List[str], pd.DataFrame], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
         """
         Move emails to inbox (add INBOX label and remove other folder labels).
         
         Args:
-            message_ids: Single message ID or list of message IDs
+            emails: Single message ID, list of message IDs, or DataFrame with 'message_id' column
             show_progress: Whether to show progress bar
             
         Returns:
             bool or Dict[str, bool]: Success status
         """
-        if isinstance(message_ids, str):
-            message_ids = [message_ids]
         return self.modify_labels(
-            message_ids=message_ids,
+            emails=emails,
             add_labels=['INBOX'],
             remove_labels=list(self.FOLDER_LABELS - {'INBOX'}),
             show_progress=show_progress
@@ -147,21 +146,19 @@ class Gmail(EmailAnalyzer):
         """
         return build_gmail_search_query(**kwargs)
     
-    def move_to_archive(self, message_ids: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
+    def move_to_archive(self, emails: Union[str, List[str], pd.DataFrame], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
         """
         Move emails to archive (remove all folder labels).
         
         Args:
-            message_ids: Single message ID or list of message IDs
+            emails: Single message ID, list of message IDs, or DataFrame with 'message_id' column
             show_progress: Whether to show progress bar
             
         Returns:
             bool or Dict[str, bool]: Success status
         """
-        if isinstance(message_ids, str):
-            message_ids = [message_ids]
         return self.modify_labels(
-            message_ids=message_ids,
+            emails=emails,
             remove_labels=list(self.FOLDER_LABELS),
             show_progress=show_progress
         )
@@ -177,51 +174,45 @@ class Gmail(EmailAnalyzer):
         Returns:
             bool or Dict[str, bool]: Success status
         """
-        if isinstance(message_ids, str):
-            message_ids = [message_ids]
         return self.modify_labels(
-            message_ids=message_ids,
+            emails=message_ids,
             add_labels=['SPAM'],
             remove_labels=list(self.FOLDER_LABELS - {'SPAM'}),
             show_progress=show_progress
         )
     
-    def add_label(self, message_ids: Union[str, List[str]], label: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
+    def add_label(self, emails: Union[str, List[str], pd.DataFrame], label: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
         """
         Add label(s) to emails.
         
         Args:
-            message_ids: Single message ID or list of message IDs
+            emails: Single message ID, list of message IDs, or DataFrame with 'message_id' column
             label: Single label name or list of label names
             show_progress: Whether to show progress bar
             
         Returns:
             bool or Dict[str, bool]: Success status
         """
-        if isinstance(message_ids, str):
-            message_ids = [message_ids]
         return self.modify_labels(
-            message_ids=message_ids,
+            emails=emails,
             add_labels=label,
             show_progress=show_progress
         )
     
-    def remove_label(self, message_ids: Union[str, List[str]], label: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
+    def remove_label(self, emails: Union[str, List[str], pd.DataFrame], label: Union[str, List[str]], show_progress: bool = True) -> Union[bool, Dict[str, bool]]:
         """
         Remove label(s) from emails.
         
         Args:
-            message_ids: Single message ID or list of message IDs
+            emails: Single message ID, list of message IDs, or DataFrame with 'message_id' column
             label: Single label name or list of label names
             show_progress: Whether to show progress bar
             
         Returns:
             bool or Dict[str, bool]: Success status
         """
-        if isinstance(message_ids, str):
-            message_ids = [message_ids]
         return self.modify_labels(
-            message_ids=message_ids,
+            emails=emails,
             remove_labels=label,
             show_progress=show_progress
         )

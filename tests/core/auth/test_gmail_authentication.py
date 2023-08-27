@@ -74,7 +74,7 @@ def test_gmail_authentication_flow():
                     print("⚠️  Gmail initialized without triggering auth flow")
                     print("This means credentials were found in the parent directory")
                     print("This test is not properly isolated")
-                    return False
+                    assert False, "Test should be isolated from existing credentials"
                     
                 except Exception as auth_error:
                     # This is what we expect - authentication should fail
@@ -95,21 +95,21 @@ def test_gmail_authentication_flow():
                             
                             if template_data.get("installed", {}).get("client_id") == "YOUR_CLIENT_ID_HERE":
                                 print("✅ Template file contains placeholder values")
-                                return True
+                                assert True  # Test passed
                             else:
                                 print("❌ Template file contains real credentials")
-                                return False
+                                assert False, "Template file should contain placeholder values"
                         else:
                             print("❌ Template credentials file was not created")
-                            return False
+                            assert False, "Template credentials file should be created"
                     else:
                         print("❌ Auth flow was not triggered - no credentials directory created")
-                        return False
+                        assert False, "Auth flow should create credentials directory"
                 
             except Exception as e:
                 print(f"❌ Unexpected error: {e}")
                 print(f"Error type: {type(e).__name__}")
-                return False
+                assert False, f"Unexpected error: {e}"
                 
         finally:
             # Clean up: remove any credentials created during test
@@ -158,14 +158,14 @@ def test_gmail_with_existing_credentials():
             print(f"✅ Sample email subject: {emails.iloc[0].get('subject', 'No subject')}")
             print(f"✅ Sample sender: {emails.iloc[0].get('sender_email', 'Unknown')}")
             
-            return True
+            assert True  # Test passed
         else:
             print("ℹ️  No emails found in the last 7 days")
-            return True  # This is still a successful test
+            assert True  # This is still a successful test
             
     except Exception as e:
         print(f"❌ Test failed: {e}")
-        return False
+        assert False, f"Test failed: {e}"
 
 
 if __name__ == "__main__":

@@ -208,5 +208,5 @@ def test_parse_date_range_invalid_type():
     """Test that invalid date types raise ValueError."""
     import pytest
     
-    with pytest.raises(ValueError, match="Invalid date type"):
+    with pytest.raises(TypeError, match="Invalid date type"):
         parse_date_range(start_date=123)  # type: ignore # int instead of datetime or str

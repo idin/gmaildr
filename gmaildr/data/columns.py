@@ -80,7 +80,7 @@ EMAIL_ML_DF_OPTIONAL_COLUMNS = [
     # Individual email analysis metrics (if they exist in input)
     'has_unsubscribe_link', 'has_marketing_language', 'has_legal_disclaimer',
     'has_promotional_content', 'has_tracking_pixels', 'has_bulk_email_indicators',
-    'external_link_count', 'image_count', 'exclamation_count', 'caps_word_count',
+    'external_link_count', 'image_count', 'caps_word_count',
     'html_to_text_ratio', 'link_to_text_ratio', 'caps_ratio', 'promotional_word_ratio'
 ]
 

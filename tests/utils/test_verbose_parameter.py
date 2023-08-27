@@ -27,7 +27,7 @@ def test_verbose_parameter():
         print(f"✓ Quiet cache manager verbose setting: {gmail_quiet.cache_manager.verbose}")
     
     print("\n✓ Verbose parameter test completed successfully!")
-    return True
+    assert True
 
 if __name__ == "__main__":
     test_verbose_parameter()

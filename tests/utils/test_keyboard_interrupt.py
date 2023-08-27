@@ -6,7 +6,7 @@ This test verifies that keyboard interrupts are handled gracefully during email 
 """
 
 from gmaildr import Gmail
-from tests.core.gmail.test_get_emails import get_emails
+from gmaildr.test_utils import get_emails
 import pytest
 import signal
 import time
@@ -24,7 +24,7 @@ def test_keyboard_interrupt_handling():
     
     # Test that we can retrieve emails without interruption
     assert len(emails) > 0
-    assert not emails.is_empty()
+    assert not emails.empty
     
     # Verify the structure is correct
     assert 'message_id' in emails.columns

@@ -103,7 +103,7 @@ class EmailOperator(CachedGmail):
         message_ids = self.client.search_messages(query=query, max_results=max_emails)
         
         if not message_ids:
-            return pd.DataFrame()  # Return empty pandas DataFrame instead of EmailDataFrame
+            return pd.DataFrame()
         
         # Use cache manager if available, otherwise fall back to direct API calls
         if self.cache_manager:
@@ -139,7 +139,7 @@ class EmailOperator(CachedGmail):
             except KeyboardInterrupt:
                 logger.warning("Email retrieval interrupted by user. Returning partial results...")
                 if not emails:
-                    return pd.DataFrame()  # Return empty pandas DataFrame
+                    return pd.DataFrame()
             
             # Validate include_metrics requires include_text
             if include_metrics and not include_text:
@@ -510,10 +510,23 @@ class EmailOperator(CachedGmail):
         else:
             # If not in inbox but not in other folders, likely archived
             return 'archive'
+
+    def get_message_ids(self, emails: Union[str, List[str], 'pd.DataFrame']) -> List[str]:
+        """
+        Get message IDs from emails.
+        """
+        if isinstance(emails, pd.DataFrame):
+            if not 'message_id' in emails.columns:
+                raise KeyError("DataFrame must have 'message_id' column")
+            return emails['message_id'].tolist()
+        elif isinstance(emails, str):
+            return [emails]
+        else:
+            return emails
     
     def modify_labels(
         self,
-        message_ids: List[str],
+        emails: Union[str, List[str], 'pd.DataFrame'],
         add_labels: Optional[Union[List[str], str]] = None,
         remove_labels: Optional[Union[List[str], str]] = None,
         show_progress: bool = True
@@ -522,7 +535,7 @@ class EmailOperator(CachedGmail):
         Modify labels for multiple email messages in batch.
         
         Args:
-            message_ids: List of message IDs to modify
+            emails: Single message ID, list of message IDs, or DataFrame with 'message_id' column
             add_labels: Labels to add
             remove_labels: Labels to remove
             show_progress: Whether to show progress bar
@@ -530,6 +543,9 @@ class EmailOperator(CachedGmail):
         Returns:
             Results of label modification operations
         """
+        # Extract message IDs from DataFrame if needed
+        message_ids = self.get_message_ids(emails)
+        # If it's already a list, use as-is
         if isinstance(add_labels, str):
             add_labels = [add_labels]
         if isinstance(remove_labels, str):
@@ -552,6 +568,7 @@ class EmailOperator(CachedGmail):
         
         return result
     
+
     def _process_labels_for_api(self, labels: List[str]) -> List[str]:
         """
         Process labels for Gmail API - convert names to IDs for custom labels.

@@ -30,7 +30,7 @@ def parse_date(date_input: Union[datetime, str]) -> datetime:
         except ValueError:
             raise ValueError(f"Invalid date format: {date_input}. Use YYYY-MM-DD format.")
     else:
-        raise ValueError(f"Invalid date type: {type(date_input)}")
+        raise TypeError(f"Invalid date type: {type(date_input)}")
 
 def parse_date_range(
     *,

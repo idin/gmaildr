@@ -69,7 +69,7 @@ def ml_dataframe(self):
 def _get_message_ids(self) -> List[str]:
     """Get message IDs from the DataFrame."""
     if 'message_id' not in self.columns:
-        raise ValueError("DataFrame must contain 'message_id' column")
+        raise KeyError("DataFrame must contain 'message_id' column")
     return self['message_id'].tolist()
 ```
 

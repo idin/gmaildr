@@ -14,8 +14,7 @@ from .core.client.gmail_client import GmailClient
 from .core.config.config import ConfigManager, setup_logging
 from .core.models.email_message import EmailMessage
 from .core.models.sender import Sender
-from .data import EmailDataFrame
-from .data import SenderDataFrame
+# Custom DataFrames removed - now using standard pandas DataFrames
 from .analysis import (
     analyze_email_content,
     detect_language_safe,
@@ -29,8 +28,6 @@ __all__ = [
     "GmailClient",
     "ConfigManager",
     "setup_logging",
-    "EmailDataFrame",
-    "SenderDataFrame",
     "EmailMessage",
     "Sender",
 
