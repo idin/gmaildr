@@ -248,6 +248,11 @@ def create_multilingual_test_emails() -> List[EmailMessage]:
 
 
 def test_get_emails():
+    """
+    Test function for get_emails functionality.
+    
+    Simple test to verify Gmail email retrieval works correctly.
+    """
     gmail = Gmail()
 
     for i in [1, 10, 100]:

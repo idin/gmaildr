@@ -7,7 +7,16 @@ import os
 from pathlib import Path
 
 def generate_tree(directory, prefix="", is_last=True, max_depth=4, current_depth=0):
-    """Generate a tree structure for a directory."""
+    """
+    Generate a tree structure for a directory.
+    
+    Args:
+        directory: Directory path to generate tree for
+        prefix: Prefix string for tree formatting
+        is_last: Whether this is the last item in the current level
+        max_depth: Maximum depth to traverse
+        current_depth: Current traversal depth
+    """
     if current_depth > max_depth:
         return ""
     

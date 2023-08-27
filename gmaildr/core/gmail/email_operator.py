@@ -514,6 +514,12 @@ class EmailOperator(CachedGmail):
     def get_message_ids(self, emails: Union[str, List[str], 'pd.DataFrame']) -> List[str]:
         """
         Get message IDs from emails.
+        
+        Args:
+            emails: Single message ID, list of message IDs, or DataFrame with message_id column
+            
+        Returns:
+            List of message IDs extracted from the input
         """
         if isinstance(emails, pd.DataFrame):
             if not 'message_id' in emails.columns:
