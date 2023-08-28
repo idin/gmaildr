@@ -50,12 +50,24 @@ def test_move_to_trash_from_inbox():
     assert restore_result is not None, "Restore to inbox should return a result"
     print(f"✅ Restore to inbox result: {restore_result}")
     
-    # Step 4: Verify restoration
+    # Step 4: Verify restoration using label-based approach
     gmail_verify2 = Gmail()
-    inbox_check = gmail_verify2.get_emails(in_folder='inbox', max_emails=100)
-    restored_emails = inbox_check[inbox_check['message_id'].isin(message_ids)]
+    all_emails = gmail_verify2.get_emails(days=365, max_emails=1000)
+    restored_emails = all_emails[all_emails['message_id'].isin(message_ids)]
     
-    assert not restored_emails.empty, "Emails should be restored to inbox"
+    if restored_emails.empty:
+        print("⚠️ Could not find restored emails, trying with fresh Gmail instance...")
+        gmail_verify3 = Gmail(enable_cache=False) if hasattr(Gmail, '__init__') else Gmail()
+        all_emails = gmail_verify3.get_emails(days=365, max_emails=1000)
+        restored_emails = all_emails[all_emails['message_id'].isin(message_ids)]
+    
+    assert not restored_emails.empty, "Emails should be found after restoration"
+    
+    # Check that emails have INBOX label (are restored to inbox)
+    for _, email in restored_emails.iterrows():
+        labels = email.get('labels', [])
+        has_inbox_label = 'INBOX' in labels
+        assert has_inbox_label, f"Email {email['message_id']} should be restored to inbox (have INBOX label), but has labels: {labels}"
     print(f"✅ Successfully restored {len(restored_emails)} emails to inbox")
     
     print("🎯 Test completed - inbox unchanged!")
@@ -80,13 +92,26 @@ def test_move_to_trash_from_archive():
     assert result is not None, "Move to trash should return a result"
     print(f"✅ Move to trash result: {result}")
     
-    # Step 2: Verify emails are now in trash
+    # Step 2: Verify emails are now in trash using label-based approach
     gmail_verify = Gmail()
     message_ids = archived_emails['message_id'].tolist()
-    trash_check = gmail_verify.get_emails(in_folder='trash', max_emails=100)
-    moved_emails = trash_check[trash_check['message_id'].isin(message_ids)]
+    all_emails = gmail_verify.get_emails(days=365, max_emails=1000)
+    moved_emails = all_emails[all_emails['message_id'].isin(message_ids)]
     
-    assert not moved_emails.empty, "Emails should now be in trash"
+    if moved_emails.empty:
+        print("⚠️ Could not find moved emails, trying with fresh Gmail instance...")
+        gmail_verify2 = Gmail(enable_cache=False) if hasattr(Gmail, '__init__') else Gmail()
+        all_emails = gmail_verify2.get_emails(days=365, max_emails=1000)
+        moved_emails = all_emails[all_emails['message_id'].isin(message_ids)]
+    
+    assert not moved_emails.empty, "Emails should be found after move"
+    
+    # Check that emails have TRASH label (are in trash)
+    for _, email in moved_emails.iterrows():
+        labels = email.get('labels', [])
+        has_trash_label = 'TRASH' in labels
+        assert has_trash_label, f"Email {email['message_id']} should be in trash (have TRASH label), but has labels: {labels}"
+    
     print(f"✅ Verified {len(moved_emails)} emails are now in trash")
     
     # Step 3: RESTORE - Move back to archive
@@ -96,12 +121,24 @@ def test_move_to_trash_from_archive():
     assert restore_result is not None, "Restore to archive should return a result"
     print(f"✅ Restore to archive result: {restore_result}")
     
-    # Step 4: Verify restoration
-    gmail_verify2 = Gmail()
-    archive_check = gmail_verify2.get_emails(in_folder='archive', max_emails=100)
-    restored_emails = archive_check[archive_check['message_id'].isin(message_ids)]
+    # Step 4: Verify restoration using label-based approach
+    gmail_verify3 = Gmail()
+    all_emails = gmail_verify3.get_emails(days=365, max_emails=1000)
+    restored_emails = all_emails[all_emails['message_id'].isin(message_ids)]
     
-    assert not restored_emails.empty, "Emails should be restored to archive"
+    if restored_emails.empty:
+        print("⚠️ Could not find restored emails, trying with fresh Gmail instance...")
+        gmail_verify4 = Gmail(enable_cache=False) if hasattr(Gmail, '__init__') else Gmail()
+        all_emails = gmail_verify4.get_emails(days=365, max_emails=1000)
+        restored_emails = all_emails[all_emails['message_id'].isin(message_ids)]
+    
+    assert not restored_emails.empty, "Emails should be found after restoration"
+    
+    # Check that emails are archived (no INBOX, TRASH, or SPAM labels)
+    for _, email in restored_emails.iterrows():
+        labels = email.get('labels', [])
+        has_folder_label = any(label in ['INBOX', 'TRASH', 'SPAM'] for label in labels)
+        assert not has_folder_label, f"Email {email['message_id']} should be archived (no folder labels), but has labels: {labels}"
     print(f"✅ Successfully restored {len(restored_emails)} emails to archive")
     
     print("🎯 Test completed - original folders unchanged!")

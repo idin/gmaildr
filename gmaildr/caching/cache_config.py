@@ -35,9 +35,8 @@ class CacheConfig:
         
         # Set up cache directory structure
         if cache_dir is None:
-            # Default to 'cache' directory in project root
-            project_root = Path(__file__).parent.parent.parent
-            cache_dir = project_root / "cache"
+            # Default to 'cache' directory relative to current working directory
+            cache_dir = "cache"
         
         self.cache_dir = Path(cache_dir)
         self.emails_dir = self.cache_dir / "emails"

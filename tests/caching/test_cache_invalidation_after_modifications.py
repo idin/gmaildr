@@ -16,19 +16,20 @@ def test_cache_invalidation_after_move_to_archive():
     """Test that cache is invalidated after moving emails to archive."""
     gmail = Gmail()
     
-    # Step 1: Get some inbox emails and ensure they're cached
+        # Step 1: Get some inbox emails and ensure they're cached
     print("📥 Getting inbox emails to populate cache...")
-    inbox_emails = get_emails(gmail, n=2, in_folder='inbox')
-    
+    inbox_emails, days_used = get_emails(gmail, n=2, in_folder='inbox', return_days_used=True)
+
     if inbox_emails.empty:
         pytest.skip("No inbox emails found for testing")
-    
+
     message_ids = inbox_emails['message_id'].tolist()
-    print(f"✅ Got {len(inbox_emails)} inbox emails: {message_ids}")
-    
+    print(f"✅ Got {len(inbox_emails)} inbox emails: {message_ids} (using {days_used} days)")
+
     # Step 2: Verify emails are initially in inbox (should be from cache)
     print("🔍 Verifying emails are initially in inbox...")
-    initial_check = gmail.get_emails(in_folder='inbox', days=365, max_emails=100)
+    # Use the same date range that get_emails() actually used
+    initial_check = gmail.get_emails(in_folder='inbox', days=days_used, max_emails=100)
     initial_inbox_emails = initial_check[initial_check['message_id'].isin(message_ids)]
     
     assert not initial_inbox_emails.empty, "Emails should initially be in inbox"
@@ -55,7 +56,7 @@ def test_cache_invalidation_after_move_to_archive():
     time.sleep(1)
     
     # This should NOT find the emails in inbox anymore (cache should be invalidated)
-    post_move_inbox_check = gmail.get_emails(in_folder='inbox', days=365, max_emails=100)
+    post_move_inbox_check = gmail.get_emails(in_folder='inbox', days=days_used, max_emails=50)
     post_move_inbox_emails = post_move_inbox_check[post_move_inbox_check['message_id'].isin(message_ids)]
     
     # The key test: emails should NOT be found in inbox anymore
@@ -75,12 +76,12 @@ def test_cache_invalidation_after_move_to_archive():
     
     # Step 5: Verify emails can be found in archive
     print("🔍 Verifying emails are now in archive...")
-    archive_check = gmail.get_emails(in_folder='archive', days=365, max_emails=100)
+    archive_check = gmail.get_emails(in_folder='archive', days=days_used, max_emails=50)
     archive_emails = archive_check[archive_check['message_id'].isin(message_ids)]
     
     if archive_emails.empty:
         print("⚠️ Emails not found in archive - checking all emails...")
-        all_emails = gmail.get_emails(days=365, max_emails=500)
+        all_emails = gmail.get_emails(days=days_used, max_emails=100)
         found_emails = all_emails[all_emails['message_id'].isin(message_ids)]
         
         if not found_emails.empty:
@@ -111,16 +112,16 @@ def test_cache_invalidation_timing():
     gmail = Gmail()
     
     # Get some emails to work with
-    emails = get_emails(gmail, n=1, in_folder='inbox')
+    emails, days_used = get_emails(gmail, n=1, in_folder='inbox', return_days_used=True)
     
     if emails.empty:
         pytest.skip("No emails found for testing")
     
     message_id = emails.iloc[0]['message_id']
-    print(f"📧 Testing cache invalidation timing for email: {message_id}")
+    print(f"📧 Testing cache invalidation timing for email: {message_id} (using {days_used} days)")
     
-    # Step 1: Get initial state
-    initial_emails = gmail.get_emails(days=365, max_emails=100)
+    # Step 1: Get initial state (use same date range as get_emails)
+    initial_emails = gmail.get_emails(days=days_used, max_emails=20)
     initial_email = initial_emails[initial_emails['message_id'] == message_id]
     
     if initial_email.empty:
@@ -137,7 +138,7 @@ def test_cache_invalidation_timing():
     
     # Step 3: Immediately check cache (should be invalidated)
     print("🔍 Checking cache immediately after modification...")
-    immediate_check = gmail.get_emails(days=365, max_emails=100)
+    immediate_check = gmail.get_emails(days=days_used, max_emails=20)
     immediate_email = immediate_check[immediate_check['message_id'] == message_id]
     
     if not immediate_email.empty:
@@ -153,7 +154,7 @@ def test_cache_invalidation_timing():
     print("⏰ Waiting 2 seconds and checking again...")
     time.sleep(2)
     
-    delayed_check = gmail.get_emails(days=365, max_emails=100)
+    delayed_check = gmail.get_emails(days=days_used, max_emails=20)
     delayed_email = delayed_check[delayed_check['message_id'] == message_id]
     
     if not delayed_email.empty:

@@ -34,9 +34,8 @@ class EmailListManager:
         """
         # Set up storage directory
         if storage_dir is None:
-            # Default to 'email_lists' directory in project root
-            project_root = Path(__file__).parent.parent.parent
-            storage_dir = project_root / "email_lists"
+            # Default to 'email_lists' directory relative to current working directory
+            storage_dir = "email_lists"
         
         self.storage_dir = Path(storage_dir)
         self.storage_dir.mkdir(parents=True, exist_ok=True)

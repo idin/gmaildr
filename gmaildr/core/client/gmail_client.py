@@ -7,9 +7,10 @@ and retrieving email data for analysis.
 
 import os
 import time
+
+import logging
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any, Generator
-import logging
 from email.utils import parsedate_to_datetime as parse_email_timestamp
 
 from ...utils.progress import EmailProgressTracker
@@ -635,7 +636,7 @@ class GmailClient:
         Returns:
             tuple[str, Optional[str]]: Email address and display name.
         """
-        import re
+        
         
         # Pattern to match "Name <email@domain.com>" format
         match = re.match(r'^(.+?)\s*<(.+?)>$', sender_raw.strip())

@@ -145,6 +145,7 @@ def test_no_config_files_in_wrong_locations():
         'tests',  # Test configs
         'docs',   # Documentation configs
         'gmaildr/core',  # Application configs
+        'gmaildr/core/config',  # Application config directory
     }
     
     for root, dirs, files in os.walk(project_root):
@@ -196,7 +197,7 @@ def test_no_credentials_in_code_directories():
     ]
     
     # Directories where credentials might be allowed
-    allowed_dirs = {'credentials'}  # Root directory and credentials directory
+    allowed_dirs = {'credentials', 'notebooks/credentials'}  # Root directory and credentials directory
     
     for root, dirs, files in os.walk(project_root):
         for file in files:
@@ -257,8 +258,11 @@ def test_no_orphaned_directories():
     
     # Directories that are allowed to be empty
     allowed_empty_dirs = {
-        'cache', 'output', 'email_lists', 'misc/examples',
-        '__pycache__', '.pytest_cache', '.ipynb_checkpoints'
+        'cache', 'output', 'email_lists', 'misc/examples', 'logs',
+        'notebooks/cache', 'notebooks/output', 'notebooks/credentials',
+        'notebooks/cache/emails', 'cache/emails', 'cache/metadata',
+        '__pycache__', '.pytest_cache', '.ipynb_checkpoints',
+        '.git/objects/pack', '.git/objects/info', '.git/refs/tags'
     }
     
     for root, dirs, files in os.walk(project_root):

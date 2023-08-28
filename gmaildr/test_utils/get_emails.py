@@ -9,17 +9,19 @@ from ..core.models.email_message import EmailMessage
 import pandas as pd
 
 
-def get_emails(gmail: Gmail, n: int, **kwargs):
+def get_emails(gmail: Gmail, n: int, return_days_used: bool = False, **kwargs):
     """
     Get at least N emails by intelligently increasing the date range.
     
     Args:
         gmail: Gmail instance
         n: Minimum number of emails to retrieve
+        return_days_used: If True, return tuple of (emails, days_used)
         **kwargs: Additional filtering parameters (in_folder, from_sender, subject_contains, etc.)
         
     Returns:
         DataFrame containing at least N emails (or all available if less than N)
+        If return_days_used=True, returns tuple of (DataFrame, int)
     """
     days = 1
     
@@ -29,13 +31,14 @@ def get_emails(gmail: Gmail, n: int, **kwargs):
         emails = gmail.get_emails(days=days, max_emails=n, **kwargs)
         
         if len(emails) >= n:
-            return emails.head(n)
+            result = emails.head(n)
+            return (result, days) if return_days_used else result
         
         # Double the days for next iteration (exponential growth)
         days *= 2
 
     # If we reach here, return whatever we have
-    return emails
+    return (emails, days) if return_days_used else emails
         
 
 def create_test_email(

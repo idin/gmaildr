@@ -4,6 +4,7 @@ Generate tree structures for package and test directories to compare them.
 """
 
 import os
+import sys
 from pathlib import Path
 
 def generate_tree(directory, prefix="", is_last=True, max_depth=4, current_depth=0):
@@ -54,20 +55,20 @@ def generate_tree(directory, prefix="", is_last=True, max_depth=4, current_depth
 
 def main():
     """Generate and display both trees."""
-    print("🌳 PACKAGE TREE (gmaildr/)")
-    print("=" * 50)
+    sys.stdout.write("🌳 PACKAGE TREE (gmaildr/)")
+    sys.stdout.write("=" * 50 + "\n"); sys.stdout.flush()
     package_tree = generate_tree("gmaildr")
-    print(package_tree)
+    sys.stdout.write(package_tree + "\n"); sys.stdout.flush()
     
-    print("\n" + "=" * 50)
-    print("🧪 TEST TREE (tests/)")
-    print("=" * 50)
+    sys.stdout.write("\n" + "=" * 50 + "\n"); sys.stdout.flush()
+    sys.stdout.write("🧪 TEST TREE (tests/)")
+    sys.stdout.write("=" * 50 + "\n"); sys.stdout.flush()
     test_tree = generate_tree("tests")
-    print(test_tree)
+    sys.stdout.write(test_tree + "\n"); sys.stdout.flush()
     
-    print("\n" + "=" * 50)
-    print("🔍 STRUCTURE COMPARISON")
-    print("=" * 50)
+    sys.stdout.write("\n" + "=" * 50 + "\n"); sys.stdout.flush()
+    sys.stdout.write("🔍 STRUCTURE COMPARISON" + "\n"); sys.stdout.flush()
+    sys.stdout.write("=" * 50 + "\n"); sys.stdout.flush()
     
     # Compare structures
     package_dirs = set()
@@ -85,30 +86,30 @@ def main():
             if rel_path != ".":
                 test_dirs.add(rel_path)
     
-    print("📦 Package directories:")
+    sys.stdout.write("📦 Package directories:" + "\n"); sys.stdout.flush()
     for dir_path in sorted(package_dirs):
-        print(f"  - {dir_path}")
+        sys.stdout.write(f"  - {dir_path}" + "\n"); sys.stdout.flush()
     
-    print("\n🧪 Test directories:")
+    sys.stdout.write("\n🧪 Test directories:" + "\n"); sys.stdout.flush()
     for dir_path in sorted(test_dirs):
-        print(f"  - {dir_path}")
+        sys.stdout.write(f"  - {dir_path}" + "\n"); sys.stdout.flush()
     
     # Find mismatches
     package_only = package_dirs - test_dirs
     test_only = test_dirs - package_dirs
     
     if package_only:
-        print(f"\n❌ Package directories without tests:")
+        sys.stdout.write(f"\n❌ Package directories without tests:" + "\n"); sys.stdout.flush()
         for dir_path in sorted(package_only):
-            print(f"  - {dir_path}")
+            sys.stdout.write(f"  - {dir_path}" + "\n"); sys.stdout.flush()
     
     if test_only:
-        print(f"\n❌ Test directories without package counterparts:")
+        sys.stdout.write(f"\n❌ Test directories without package counterparts:" + "\n"); sys.stdout.flush()
         for dir_path in sorted(test_only):
-            print(f"  - {dir_path}")
+            sys.stdout.write(f"  - {dir_path}" + "\n"); sys.stdout.flush()
     
     if not package_only and not test_only:
-        print("\n✅ All package directories have corresponding test directories!")
+        sys.stdout.write("\n✅ All package directories have corresponding test directories!" + "\n"); sys.stdout.flush()
 
 if __name__ == "__main__":
     main()

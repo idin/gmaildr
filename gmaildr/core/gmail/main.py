@@ -31,28 +31,9 @@ class Gmail(EmailAnalyzer):
         report = gmail.analyze(days=90)
     """
     
-    # Default credential file paths - use absolute paths based on project root
-    import os
-    # Find the project root (where setup.py is located)
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = None
-    # Walk up the directory tree to find setup.py
-    for i in range(10):  # Limit to 10 levels up
-        if os.path.exists(os.path.join(current_dir, "setup.py")):
-            project_root = current_dir
-            break
-        parent_dir = os.path.dirname(current_dir)
-        if parent_dir == current_dir:  # Reached root
-            break
-        current_dir = parent_dir
-    
-    if project_root:
-        DEFAULT_CREDENTIALS_FILE = os.path.join(project_root, "credentials", "credentials.json")
-        DEFAULT_TOKEN_FILE = os.path.join(project_root, "credentials", "token.pickle")
-    else:
-        # Fallback to relative paths if project root not found
-        DEFAULT_CREDENTIALS_FILE = "credentials/credentials.json"
-        DEFAULT_TOKEN_FILE = "credentials/token.pickle"
+    # Default credential file paths - use relative paths that respect working directory
+    DEFAULT_CREDENTIALS_FILE = "credentials/credentials.json"
+    DEFAULT_TOKEN_FILE = "credentials/token.pickle"
     
     # Folder labels that are mutually exclusive
     FOLDER_LABELS = {'INBOX', 'SPAM', 'TRASH'}
