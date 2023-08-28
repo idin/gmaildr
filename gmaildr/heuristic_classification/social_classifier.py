@@ -5,8 +5,9 @@ Simple function to classify emails as social media related based on various indi
 """
 
 import re
-import pandas as pd
 from typing import Optional
+
+import pandas as pd
 
 
 def is_social_email(

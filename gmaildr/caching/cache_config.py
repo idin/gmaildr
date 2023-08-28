@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from typing import Optional, Union
 
+
 class CacheConfig:
     """
     Configuration for email caching system.

@@ -6,18 +6,18 @@ cached email retrieval and storage.
 """
 
 import logging
-from typing import List, Dict, Any, Optional, Set, Literal
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Literal, Optional, Set
+import shutil  
 import pandas as pd
 
+from ..analysis import process_metrics
+from ..core.gmail import Gmail
+from ..utils.progress import EmailProgressTracker
 from .cache_config import CacheConfig
 from .file_storage import EmailFileStorage
-from .schema_manager import EmailSchemaManager
 from .index_manager import EmailIndexManager
-from ..utils.progress import EmailProgressTracker
-from ..core.gmail import Gmail
-from ..analysis import process_metrics
-
+from .schema_manager import EmailSchemaManager
 
 logger = logging.getLogger(__name__)
 
@@ -403,7 +403,7 @@ class EmailCacheManager:
             EmailMessage object.
         """
         from ..core.models.email_message import EmailMessage
-        
+
         # Parse timestamp
         if isinstance(email_data['timestamp'], str):
             timestamp = datetime.fromisoformat(email_data['timestamp'].replace('Z', '+00:00'))
@@ -635,8 +635,8 @@ class EmailCacheManager:
         try:
             if message_ids is None:
                 # Invalidate entire cache
-                import shutil
                 
+
                 # Remove cache directory
                 if self.config.cache_dir.exists():
                     shutil.rmtree(self.config.cache_dir)

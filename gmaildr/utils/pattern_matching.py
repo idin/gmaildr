@@ -1,4 +1,5 @@
-from typing import Union, List
+from typing import List, Union
+
 
 def _match_pattern(text: str, pattern: str) -> bool:
     """

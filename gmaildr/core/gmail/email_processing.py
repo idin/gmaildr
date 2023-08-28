@@ -8,10 +8,11 @@ This module handles email processing operations including:
 - Role-based email detection
 """
 
-from typing import List
-import pandas as pd
 import base64
 import logging
+from typing import List
+
+import pandas as pd
 
 from ...analysis.language_detector import detect_language_safe
 from ..config.config import ROLE_WORDS

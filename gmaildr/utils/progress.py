@@ -5,7 +5,8 @@ This module provides colorful, cross-platform progress bars that work
 consistently in both terminal and Jupyter notebook environments.
 """
 
-from typing import Iterator, TypeVar, Callable, Optional
+from typing import Callable, Iterator, Optional, TypeVar
+
 from tqdm.auto import tqdm
 
 T = TypeVar('T')

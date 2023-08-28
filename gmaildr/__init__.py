@@ -9,19 +9,19 @@ email management tasks.
 __version__ = "1.1.0"
 __author__ = "idin"
 
+# Custom DataFrames removed - now using standard pandas DataFrames
+from .analysis import (
+    analyze_email_content,
+    detect_language_safe,
+    get_language_name,
+    is_english,
+    process_metrics,
+)
 from .core import Gmail
 from .core.client.gmail_client import GmailClient
 from .core.config.config import ConfigManager, setup_logging
 from .core.models.email_message import EmailMessage
 from .core.models.sender import Sender
-# Custom DataFrames removed - now using standard pandas DataFrames
-from .analysis import (
-    analyze_email_content,
-    detect_language_safe,
-    is_english,
-    get_language_name,
-    process_metrics
-)
 
 __all__ = [
     "Gmail",

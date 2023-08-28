@@ -1,6 +1,8 @@
-from typing import Optional, List, Union, Dict
-import pandas as pd
 import logging
+from typing import Dict, List, Optional, Union
+
+import pandas as pd
+
 from .gmail_base import GmailBase
 
 logger = logging.getLogger(__name__)

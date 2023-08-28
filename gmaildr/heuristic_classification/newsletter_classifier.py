@@ -5,8 +5,9 @@ Simple function to classify emails as newsletters based on various indicators.
 """
 
 import re
-import pandas as pd
 from typing import Optional
+
+import pandas as pd
 
 
 def is_newsletter_email(

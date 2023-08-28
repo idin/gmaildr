@@ -6,7 +6,8 @@ to ensure consistency between cached and non-cached email retrieval.
 """
 
 from datetime import datetime, timedelta
-from typing import Optional, Union, List, Literal
+from typing import List, Literal, Optional, Union
+
 from .date_utils import parse_date_range
 
 

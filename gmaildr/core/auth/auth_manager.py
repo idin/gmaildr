@@ -5,13 +5,14 @@ This module handles all OAuth2 authentication logic for Gmail API access,
 separated from the main Gmail class for better organization and reusability.
 """
 
+import json
+import logging
 import os
 import pickle
-import logging
 import sys
 import time
-from typing import Optional, Tuple, Any
 from datetime import datetime
+from typing import Any, Optional, Tuple
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -219,11 +220,11 @@ class GmailAuthManager:
                     sys.stdout.write("2. Click the download button (⬇️) to get new credentials")
                     sys.stdout.write("3. Replace your existing credentials.json file" + "\n"); sys.stdout.flush()
                     sys.stdout.write(f"4. Place the new file at: {self.credentials_file}" + "\n"); sys.stdout.flush()
-                    sys.stdout.write( + "\n"); sys.stdout.flush()
+                    sys.stdout.write("\n"); sys.stdout.flush()
                     sys.stdout.write("⏳ Waiting for new credentials file..." + "\n"); sys.stdout.flush()
                     
                     # Wait for new credentials file
-                    import time
+
                     max_wait_time = 300  # 5 minutes
                     check_interval = 2  # 2 seconds
                     waited_time = 0
@@ -263,11 +264,11 @@ class GmailAuthManager:
                     sys.stdout.write("2. Click the download button (⬇️) to get new credentials")
                     sys.stdout.write("3. Replace your existing credentials.json file" + "\n"); sys.stdout.flush()
                     sys.stdout.write(f"4. Place the new file at: {self.credentials_file}" + "\n"); sys.stdout.flush()
-                    sys.stdout.write( + "\n"); sys.stdout.flush()
+                    sys.stdout.write("\n"); sys.stdout.flush()
                     sys.stdout.write("⏳ Waiting for new credentials file..." + "\n"); sys.stdout.flush()
                     
                     # Wait for new credentials file
-                    import time
+
                     max_wait_time = 300  # 5 minutes
                     check_interval = 2  # 2 seconds
                     waited_time = 0
@@ -308,43 +309,43 @@ class GmailAuthManager:
         
         sys.stdout.write("1. 📋 Go to Google Cloud Console:" + "\n"); sys.stdout.flush()
         sys.stdout.write("   https://console.cloud.google.com/" + "\n"); sys.stdout.flush()
-        sys.stdout.write( + "\n"); sys.stdout.flush()
+        sys.stdout.write("\n"); sys.stdout.flush()
         
         sys.stdout.write("2. 🆕 Create a new project or select an existing one" + "\n"); sys.stdout.flush()
-        sys.stdout.write( + "\n"); sys.stdout.flush()
+        sys.stdout.write("\n"); sys.stdout.flush()
         
         sys.stdout.write("3. 🔧 Enable the Gmail API:" + "\n"); sys.stdout.flush()
         sys.stdout.write("   - Go to 'APIs & Services' > 'Library'" + "\n"); sys.stdout.flush()
         sys.stdout.write("   - Search for 'Gmail API'" + "\n"); sys.stdout.flush()
         sys.stdout.write("   - Click on it and press 'Enable'" + "\n"); sys.stdout.flush()
-        sys.stdout.write( + "\n"); sys.stdout.flush()
+        sys.stdout.write("\n"); sys.stdout.flush()
         
         sys.stdout.write("4. 🔑 Create OAuth2 credentials:" + "\n"); sys.stdout.flush()
         sys.stdout.write("   - Go to 'APIs & Services' > 'Credentials'" + "\n"); sys.stdout.flush()
         sys.stdout.write("   - Click 'Create Credentials' > 'OAuth 2.0 Client IDs'" + "\n"); sys.stdout.flush()
         sys.stdout.write("   - Choose 'Desktop application' as the application type" + "\n"); sys.stdout.flush()
-        sys.stdout.write("   - Give it a name (e.g., 'Gmail Doctor')")
+        sys.stdout.write("   - Give it a name (e.g., 'Gmail Doctor')\n"); sys.stdout.flush()
         sys.stdout.write("   - Click 'Create'" + "\n"); sys.stdout.flush()
-        sys.stdout.write( + "\n"); sys.stdout.flush()
+        sys.stdout.write("\n"); sys.stdout.flush()
         
         sys.stdout.write("5. 📥 Download the credentials:" + "\n"); sys.stdout.flush()
-        sys.stdout.write("   - Click the download button (⬇️) next to your new OAuth2 client")
+        sys.stdout.write("   - Click the download button (⬇️) next to your new OAuth2 client\n"); sys.stdout.flush()
         sys.stdout.write("   - Save the JSON file as 'credentials.json'" + "\n"); sys.stdout.flush()
-        sys.stdout.write( + "\n"); sys.stdout.flush()
+        sys.stdout.write("\n"); sys.stdout.flush()
         
         sys.stdout.write("6. 📁 Place the credentials file:" + "\n"); sys.stdout.flush()
         sys.stdout.write(f"   - Move 'credentials.json' to: {self.credentials_file}" + "\n"); sys.stdout.flush()
-        sys.stdout.write( + "\n"); sys.stdout.flush()
+        sys.stdout.write("\n"); sys.stdout.flush()
         
         sys.stdout.write("7. 🔄 Restart Gmail Doctor:" + "\n"); sys.stdout.flush()
         sys.stdout.write("   - Run your Gmail code again" + "\n"); sys.stdout.flush()
         sys.stdout.write("   - A browser window will open for authentication" + "\n"); sys.stdout.flush()
         sys.stdout.write("   - Follow the prompts to authorize Gmail Doctor" + "\n"); sys.stdout.flush()
-        sys.stdout.write( + "\n"); sys.stdout.flush()
+        sys.stdout.write("\n"); sys.stdout.flush()
         
         sys.stdout.write("📝 Note: You only need to do this setup once." + "\n"); sys.stdout.flush()
         sys.stdout.write("After the first authentication, Gmail Doctor will remember your credentials." + "\n"); sys.stdout.flush()
-        sys.stdout.write( + "\n"); sys.stdout.flush()
+        sys.stdout.write("\n"); sys.stdout.flush()
         sys.stdout.write("="*60 + "\n"); sys.stdout.flush()
         sys.stdout.write("Need help? Check the documentation or create an issue on GitHub." + "\n"); sys.stdout.flush()
         sys.stdout.write("="*60 + "\n" + "\n"); sys.stdout.flush()
@@ -360,13 +361,13 @@ class GmailAuthManager:
         sys.stdout.write("❌ OAuth2 Authentication Error" + "\n"); sys.stdout.flush()
         sys.stdout.write("="*60 + "\n"); sys.stdout.flush()
         sys.stdout.write(f"Error: {error}" + "\n"); sys.stdout.flush()
-        sys.stdout.write( + "\n"); sys.stdout.flush()
+        sys.stdout.write("\n"); sys.stdout.flush()
         sys.stdout.write("This usually means:" + "\n"); sys.stdout.flush()
         sys.stdout.write("  • The credentials file is invalid or corrupted" + "\n"); sys.stdout.flush()
         sys.stdout.write("  • The OAuth2 client ID is incorrect" + "\n"); sys.stdout.flush()
         sys.stdout.write("  • The Gmail API is not enabled in your project" + "\n"); sys.stdout.flush()
         sys.stdout.write("  • Your Google account doesn't have permission" + "\n"); sys.stdout.flush()
-        sys.stdout.write( + "\n"); sys.stdout.flush()
+        sys.stdout.write("\n"); sys.stdout.flush()
         sys.stdout.write("Please check your credentials.json file and try again." + "\n"); sys.stdout.flush()
         sys.stdout.write("="*60 + "\n"); sys.stdout.flush()
     
@@ -381,12 +382,12 @@ class GmailAuthManager:
         sys.stdout.write("❌ Gmail Service Error" + "\n"); sys.stdout.flush()
         sys.stdout.write("="*60 + "\n"); sys.stdout.flush()
         sys.stdout.write(f"Error: {error}" + "\n"); sys.stdout.flush()
-        sys.stdout.write( + "\n"); sys.stdout.flush()
+        sys.stdout.write("\n"); sys.stdout.flush()
         sys.stdout.write("This usually means:" + "\n"); sys.stdout.flush()
         sys.stdout.write("  • The Gmail API is not enabled in your project" + "\n"); sys.stdout.flush()
         sys.stdout.write("  • Your account doesn't have Gmail access" + "\n"); sys.stdout.flush()
         sys.stdout.write("  • There's a network connectivity issue" + "\n"); sys.stdout.flush()
-        sys.stdout.write( + "\n"); sys.stdout.flush()
+        sys.stdout.write("\n"); sys.stdout.flush()
         sys.stdout.write("Please check your Google Cloud Console settings." + "\n"); sys.stdout.flush()
         sys.stdout.write("="*60 + "\n"); sys.stdout.flush()
     
@@ -401,7 +402,7 @@ class GmailAuthManager:
         sys.stdout.write("❌ General Authentication Error" + "\n"); sys.stdout.flush()
         sys.stdout.write("="*60 + "\n"); sys.stdout.flush()
         sys.stdout.write(f"Error: {error}" + "\n"); sys.stdout.flush()
-        sys.stdout.write( + "\n"); sys.stdout.flush()
+        sys.stdout.write("\n"); sys.stdout.flush()
         sys.stdout.write("An unexpected error occurred during authentication." + "\n"); sys.stdout.flush()
         sys.stdout.write("Please check your setup and try again." + "\n"); sys.stdout.flush()
         sys.stdout.write("="*60 + "\n"); sys.stdout.flush()
@@ -442,7 +443,6 @@ class GmailAuthManager:
         
         try:
             with open(self.credentials_file, 'w') as f:
-                import json
                 json.dump(template_content, f, indent=2)
             sys.stdout.write(f"✅ Created template credentials file: {self.credentials_file}" + "\n"); sys.stdout.flush()
             sys.stdout.write("⚠️  This is just a template - you need to replace it with your actual credentials!" + "\n"); sys.stdout.flush()

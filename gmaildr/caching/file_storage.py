@@ -6,9 +6,9 @@ Handles saving, loading, and managing individual email cache files.
 
 import json
 import logging
-from pathlib import Path
-from typing import Dict, Any, Optional, List
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 

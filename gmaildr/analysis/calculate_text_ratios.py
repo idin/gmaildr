@@ -8,7 +8,6 @@ in email text content, such as caps ratio, promotional word ratio, etc.
 import re
 from typing import Optional
 
-
 # Import dependencies
 from .count_caps_words import email_count_caps_words
 from .marketing_language import email_count_promotional_words

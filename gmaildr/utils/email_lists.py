@@ -6,13 +6,13 @@ such as blacklists, whitelists, friend lists, etc. Supports disk persistence
 and fast lookups.
 """
 
+import hashlib
 import json
 import logging
-from pathlib import Path
-from typing import Dict, Set, List, Optional, Union
 from datetime import datetime
-import hashlib
-
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Union
+import re
 logger = logging.getLogger(__name__)
 
 
@@ -338,8 +338,8 @@ class EmailListManager:
         Returns:
             List of matching email addresses.
         """
-        import re
         
+
         # Convert wildcard pattern to regex
         regex_pattern = pattern.replace('*', '.*').replace('?', '.')
         regex = re.compile(regex_pattern, re.IGNORECASE)

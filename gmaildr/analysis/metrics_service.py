@@ -4,9 +4,11 @@ Metrics processing for GmailDr.
 This module provides functions for processing email metrics.
 """
 
-import pandas as pd
 import logging
 from typing import Optional
+
+import pandas as pd
+
 from .analyze_email_content import analyze_email_content
 
 logger = logging.getLogger(__name__)

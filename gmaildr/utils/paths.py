@@ -5,8 +5,8 @@ This module provides utility functions to get package directories and paths
 that can be used by tests and other modules.
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
 
 
 def get_package_root() -> Path:

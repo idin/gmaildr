@@ -1,5 +1,7 @@
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 from .gmail_helper import GmailHelper
+
 
 class CachedGmail(GmailHelper):
     """
@@ -30,7 +32,7 @@ class CachedGmail(GmailHelper):
         # Initialize cache manager if caching is enabled
         self.cache_manager = None
         if enable_cache:
-            from ...caching import EmailCacheManager, CacheConfig
+            from ...caching import CacheConfig, EmailCacheManager
             cache_config = CacheConfig()
             self.cache_manager = EmailCacheManager(
                 cache_config=cache_config,

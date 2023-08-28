@@ -5,20 +5,19 @@ This module provides the main interface for connecting to Gmail
 and retrieving email data for analysis.
 """
 
+import logging
 import os
 import time
-
-import logging
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any, Generator
 from email.utils import parsedate_to_datetime as parse_email_timestamp
+from typing import Any, Dict, Generator, List, Optional
+
+from googleapiclient.errors import HttpError
+from googleapiclient.http import BatchHttpRequest
 
 from ...utils.progress import EmailProgressTracker
 from ..auth.auth_manager import GmailAuthManager
-from googleapiclient.errors import HttpError
-from googleapiclient.http import BatchHttpRequest
 from ..models.email_message import EmailMessage
-
 
 # Gmail API scopes - read and modify access to Gmail
 SCOPES = [

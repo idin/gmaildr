@@ -4,14 +4,14 @@ Index management for email caching.
 Handles quick lookup indexes for efficient cache operations.
 """
 
+import fcntl
 import json
 import logging
-import fcntl
-import tempfile
 import shutil
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Set
+import tempfile
 from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 

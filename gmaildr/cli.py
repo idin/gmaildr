@@ -5,25 +5,23 @@ This module provides a user-friendly CLI for running Gmail analysis
 and managing the GmailDr package functionality.
 """
 
+import json
 import os
 import sys
-import json
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
 import click
-from rich.console import Console
-from rich.table import Table
-from rich.progress import track
-from rich.panel import Panel
 from rich import print as rich_print
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import track
+from rich.table import Table
 
 from .core.client.gmail_client import GmailClient
-from .core.gmail.email_analyzer import EmailAnalyzer
-
 from .core.config.config import ConfigManager, GmailConfig, setup_logging
-
+from .core.gmail.email_analyzer import EmailAnalyzer
 
 console = Console()
 
@@ -441,7 +439,6 @@ def _save_analysis_results(
 ) -> None:
     """Save analysis results to file."""
     if output_format == 'json':
-        import json
         with open(output_path, 'w') as f:
             json.dump(report, f, default=str, indent=2)
     elif output_format == 'csv':

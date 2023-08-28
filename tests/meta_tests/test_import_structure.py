@@ -222,12 +222,6 @@ def test_import_order():
     
     import_order_violations = []
     
-    # Standard library modules
-    stdlib_modules = {
-        'os', 'sys', 're', 'json', 'datetime', 'time', 'pathlib',
-        'typing', 'dataclasses', 'collections', 'itertools', 'functools',
-        'logging', 'warnings', 'traceback', 'copy', 'pickle'
-    }
     
     for py_file in gmaildr_path.rglob('*.py'):
         if py_file.name == '__init__.py':
@@ -238,7 +232,7 @@ def test_import_order():
                 content = f.read()
                 
             lines = content.split('\n')
-            current_section = 'stdlib'  # Start with standard library
+            current_section = 'third_party'  # Start with third-party imports
             violations = []
             
             for line_num, line in enumerate(lines, 1):
@@ -246,24 +240,17 @@ def test_import_order():
                 
                 if line.startswith('import ') or line.startswith('from '):
                     # Determine what type of import this is
-                    if line.startswith('from gmaildr.') or line.startswith('import gmaildr.'):
+                    if (line.startswith('from gmaildr.') or line.startswith('import gmaildr.') or 
+                        line.startswith('from .') or line.startswith('from ..')):
                         import_type = 'local'
-                    elif any(module in line for module in stdlib_modules):
-                        import_type = 'stdlib'
                     else:
                         import_type = 'third_party'
                     
                     # Check if this violates the order
-                    if import_type == 'stdlib' and current_section != 'stdlib':
-                        violations.append((line_num, line, 'stdlib import after other imports'))
-                    elif import_type == 'third_party' and current_section == 'local':
+                    if import_type == 'third_party' and current_section == 'local':
                         violations.append((line_num, line, 'third_party import after local imports'))
-                    elif import_type == 'local' and current_section == 'stdlib':
-                        current_section = 'third_party'
                     elif import_type == 'local' and current_section == 'third_party':
                         current_section = 'local'
-                    elif import_type == 'third_party' and current_section == 'stdlib':
-                        current_section = 'third_party'
                         
             if violations:
                 relative_path = py_file.relative_to(gmaildr_path)

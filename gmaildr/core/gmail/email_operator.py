@@ -1,16 +1,17 @@
-from datetime import datetime, timedelta
-from typing import Optional, List, Union, Literal, Dict, Any
-import pandas as pd
-import time
-import logging
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import base64
+import logging
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Literal, Optional, Union
 
-from .cached_gmail import CachedGmail
+import pandas as pd
+
 from ...analysis.language_detector import detect_language_safe
-from ...utils.query_builder import build_gmail_search_query
 from ...utils.progress import EmailProgressTracker
+from ...utils.query_builder import build_gmail_search_query
 from ..config.config import ROLE_WORDS
+from .cached_gmail import CachedGmail
 
 logger = logging.getLogger(__name__)
 

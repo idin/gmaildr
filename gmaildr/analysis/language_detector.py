@@ -5,8 +5,8 @@ This module provides a simple interface for detecting the language of email text
 with the ability to easily swap out the underlying language detection library.
 """
 
-from typing import Tuple, Optional
 import logging
+from typing import Optional, Tuple
 
 # Import langid at module level
 try:

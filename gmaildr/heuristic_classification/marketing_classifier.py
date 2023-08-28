@@ -5,8 +5,9 @@ Simple function to classify emails as marketing based on various indicators.
 """
 
 import re
+from typing import List, Optional
+
 import pandas as pd
-from typing import Optional, List
 
 
 def _check_marketing_domain_patterns(df: pd.DataFrame, sender_email_col: str) -> List[pd.Series]:

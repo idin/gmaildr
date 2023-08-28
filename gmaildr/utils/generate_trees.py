@@ -7,6 +7,7 @@ import os
 import sys
 from pathlib import Path
 
+
 def generate_tree(directory, prefix="", is_last=True, max_depth=4, current_depth=0):
     """
     Generate a tree structure for a directory.

@@ -1,7 +1,9 @@
-from typing import Optional, List, Union, Literal, Dict, Any
+from typing import Any, Dict, List, Literal, Optional, Union
+
 import pandas as pd
 
 from .email_operator import EmailOperator
+
 
 class GmailSizer(EmailOperator):
     """

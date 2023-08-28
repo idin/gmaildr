@@ -4,9 +4,12 @@ Test utilities - shared helper functions for all tests.
 
 from datetime import datetime, timedelta
 from typing import List, Optional
-from gmaildr import Gmail
-from ..core.models.email_message import EmailMessage
+
 import pandas as pd
+
+from gmaildr import Gmail
+
+from ..core.models.email_message import EmailMessage
 
 
 def get_emails(gmail: Gmail, n: int, return_days_used: bool = False, **kwargs):

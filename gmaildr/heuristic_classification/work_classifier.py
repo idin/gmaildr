@@ -5,8 +5,9 @@ Simple function to classify emails as work-related based on various indicators.
 """
 
 import re
-import pandas as pd
 from typing import Optional
+
+import pandas as pd
 
 
 def is_work_email(

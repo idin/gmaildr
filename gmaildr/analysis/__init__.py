@@ -9,7 +9,7 @@ This module provides comprehensive email analysis capabilities including:
 """
 
 from .analyze_email_content import analyze_email_content
-from .language_detector import detect_language_safe, is_english, get_language_name
+from .language_detector import detect_language_safe, get_language_name, is_english
 from .metrics_service import process_metrics
 
 __all__ = [

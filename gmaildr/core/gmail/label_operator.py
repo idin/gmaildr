@@ -1,5 +1,7 @@
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from .email_modifier import EmailModifier
+
 
 class LabelOperator(EmailModifier):
     """

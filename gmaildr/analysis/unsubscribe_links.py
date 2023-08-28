@@ -6,6 +6,7 @@ text patterns in email content.
 """
 
 from typing import Optional
+
 from ..utils import match_patterns
 
 

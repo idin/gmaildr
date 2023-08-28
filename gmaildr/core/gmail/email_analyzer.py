@@ -5,7 +5,8 @@ This module provides analysis functionality for email data.
 """
 
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Literal
+from typing import Any, Dict, List, Literal, Optional
+
 import pandas as pd
 
 from .email_processing import EmailProcessing

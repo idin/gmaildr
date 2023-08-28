@@ -5,9 +5,9 @@ This module provides a user-friendly CLI for running Gmail analysis
 and managing the GmailDr package functionality.
 """
 
+import json
 import os
 import sys
-import json
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
@@ -17,9 +17,7 @@ from rich.console import Console
 from rich.table import Table
 
 from ..core.client.gmail_client import GmailClient
-
 from ..core.config.config import ConfigManager, setup_logging
-
 
 console = Console()
 

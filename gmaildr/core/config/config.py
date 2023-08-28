@@ -5,12 +5,12 @@ This module handles configuration settings, environment variables,
 and credential management for the Gmail API.
 """
 
-import os
 import json
 import logging
+import os
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict, Any, Optional
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 

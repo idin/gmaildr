@@ -4,8 +4,9 @@ Date utilities for Gmail queries.
 This module provides functions to handle date range logic for Gmail search queries.
 """
 
-from datetime import datetime, timedelta, date
-from typing import Optional, Union, Dict
+from datetime import date, datetime, timedelta
+from typing import Dict, Optional, Union
+
 
 def parse_date(date_input: Union[datetime, str]) -> datetime:
     """

@@ -4,11 +4,12 @@ Simple Gmail class for easy email analysis.
 This module provides a unified, easy-to-use interface for Gmail analysis.
 """
 
-from typing import Optional, List, Union, Dict
+from typing import Dict, List, Optional, Union
+
 import pandas as pd
 
-from ..config.config import ConfigManager, setup_logging
 from ...utils.query_builder import build_gmail_search_query
+from ..config.config import ConfigManager, setup_logging
 from .email_analyzer import EmailAnalyzer
 
 """

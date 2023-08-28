@@ -7,7 +7,7 @@ with all relevant metadata for analysis purposes.
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 
 @dataclass

@@ -6,24 +6,28 @@ analysis functions to provide comprehensive email content analysis.
 """
 
 import re
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
+from .bulk_email_indicators import email_has_bulk_email_indicators
+from .calculate_text_ratios import (
+    email_calculate_caps_ratio,
+    email_calculate_html_ratio,
+    email_calculate_link_ratio,
+    email_calculate_promotional_ratio,
+)
+from .count_caps_words import email_count_caps_words
+from .count_exclamations import email_count_exclamations
+from .count_external_links import email_count_external_links
+from .count_images import email_count_images
+from .legal_disclaimers import email_has_legal_disclaimer
+from .marketing_language import (
+    email_has_marketing_language,
+    email_has_promotional_content,
+)
+from .tracking_pixels import email_has_tracking_pixels
 
 # Import all analysis functions
 from .unsubscribe_links import email_has_unsubscribe_link
-from .marketing_language import email_has_marketing_language, email_has_promotional_content
-from .legal_disclaimers import email_has_legal_disclaimer
-from .bulk_email_indicators import email_has_bulk_email_indicators
-from .tracking_pixels import email_has_tracking_pixels
-from .count_external_links import email_count_external_links
-from .count_images import email_count_images
-from .count_exclamations import email_count_exclamations
-from .count_caps_words import email_count_caps_words
-from .calculate_text_ratios import (
-    email_calculate_html_ratio,
-    email_calculate_link_ratio,
-    email_calculate_caps_ratio,
-    email_calculate_promotional_ratio
-)
 
 
 def analyze_email_content(

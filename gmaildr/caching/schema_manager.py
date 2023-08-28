@@ -5,8 +5,9 @@ Handles schema versioning, field updates, and intelligent merging of cached data
 """
 
 import hashlib
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 
 class EmailSchemaManager:
     """
