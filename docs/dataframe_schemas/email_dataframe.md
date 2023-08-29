@@ -1,10 +1,8 @@
-# DataFrame Schemas 📊
+# EmailDataFrame Schema 📧
 
-Quick reference for all dataframe columns in gmaildr.
+Quick reference for EmailDataFrame columns returned by `gmail.get_emails()`.
 
-## 📧 EmailDataFrame Columns
-
-### 🚀 Fast Version (without text) - 27 columns
+## 🚀 Fast Version (without text) - 27 columns
 ```python
 emails = gmail.get_emails(include_text=False)  # Default
 ```
@@ -39,7 +37,7 @@ emails = gmail.get_emails(include_text=False)  # Default
 | 26 | `is_starred`                  | bool       | Email is starred                |
 | 27 | `in_folder`                   | str        | Current folder location         |
 
-### 🐌 Slow Version (with text) - 30 columns
+## 🐌 Slow Version (with text) - 30 columns
 ```python
 emails = gmail.get_emails(include_text=True)
 ```
@@ -52,7 +50,7 @@ emails = gmail.get_emails(include_text=True)
 | 29 | `text_language`               | str/None   | Detected text language          |
 | 30 | `text_language_confidence`    | float/None | Text language confidence        |
 
-### 📊 With Metrics (additional columns)
+## 📊 With Metrics (additional columns)
 ```python
 emails = gmail.get_emails(include_text=True, include_metrics=True)
 ```
@@ -63,36 +61,8 @@ emails = gmail.get_emails(include_text=True, include_metrics=True)
 - Human detection: `human_score`, `is_human_sender`, `content_score`
 - Communication: `question_count`, `exclamation_count`, `url_count`
 
-## 👤 Sender Analysis (Manual Aggregation)
+## 🎯 For Email Clustering
 
-**Note**: There is no built-in `SenderDataFrame` class. For sender clustering, you'll need to manually aggregate email data by `sender_email`.
-
-### Suggested Aggregation Features
-```python
-# Manual sender aggregation example
-sender_stats = emails.groupby('sender_email').agg({
-    'message_id': 'count',           # total_emails
-    'subject': 'nunique',            # unique_subjects  
-    'size_kb': ['mean', 'sum'],      # avg/total size
-    'is_read': 'mean',               # read_ratio
-    'is_important': 'mean',          # importance_ratio
-    'has_attachments': 'mean',       # attachment_ratio
-    'timestamp': ['min', 'max'],     # first/last email
-    'day_of_week': lambda x: x.mode()[0],  # most_active_day
-    'hour': lambda x: x.mode()[0],         # most_active_hour
-}).round(3)
-```
-
-**Key features to create for sender clustering:**
-- **Volume**: email count, frequency, date range
-- **Temporal**: most active day/hour, sending patterns  
-- **Content**: average size, attachment ratio, subject diversity
-- **Engagement**: read ratio, importance ratio, star ratio
-- **Behavior**: role-based detection, language patterns
-
-## 🎯 For Clustering
-
-### Email Clustering
 **Fast clustering (metadata only):**
 ```python
 # Use columns: sender_email, subject, size_kb, labels, 
@@ -102,17 +72,6 @@ sender_stats = emails.groupby('sender_email').agg({
 **Slow clustering (with content):**
 ```python
 # Add: text_content, text_language for semantic analysis
-```
-
-### Sender Clustering
-**Manual aggregation needed - no built-in SenderDataFrame:**
-```python
-# Create features by grouping emails by sender_email
-# Volume: message count, unique subjects, date range
-# Temporal: most active day/hour, sending frequency
-# Content: average size, attachment ratio
-# Engagement: read ratio, importance ratio
-# Behavior: role-based email detection
 ```
 
 ## 📝 Quick Usage
@@ -131,13 +90,5 @@ emails_slow = gmail.get_emails(days=30, include_text=True)
 # With metrics (50+ cols)
 emails_metrics = gmail.get_emails(days=30, include_text=True, include_metrics=True)
 
-# Manual sender aggregation
-senders = emails_fast.groupby('sender_email').agg({
-    'message_id': 'count',
-    'subject': 'nunique', 
-    'size_kb': 'mean'
-})
-
 print(f"Email columns: {len(emails_fast.columns)}")
-print(f"Unique senders: {len(senders)}")
 ```
