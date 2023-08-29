@@ -7,6 +7,7 @@ and retrieving email data for analysis.
 
 import logging
 import os
+import re
 import time
 from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime as parse_email_timestamp

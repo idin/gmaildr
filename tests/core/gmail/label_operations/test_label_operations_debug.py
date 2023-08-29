@@ -52,7 +52,7 @@ def test_label_operations_debug():
     if updated_email.empty:
         # Try even broader search
         print("   Email not found in initial search, trying broader search...")
-        updated_emails = gmail.get_emails(days=365, max_emails=100, use_batch=False)
+        updated_emails = gmail.get_emails(days=90, max_emails=100, use_batch=False)
         updated_email = updated_emails[updated_emails['message_id'] == message_id]
         
         if updated_email.empty:

@@ -40,13 +40,13 @@ def test_move_to_inbox_from_archive():
     # See docs/gmail_api_timing_investigation.md for the complete investigation story.
     
     gmail_verify = Gmail()
-    all_emails = gmail_verify.get_emails(days=365, max_emails=1000)
+    all_emails = gmail_verify.get_emails(days=90, max_emails=100)
     moved_emails = all_emails[all_emails['message_id'].isin(message_ids)]
     
     if moved_emails.empty:
         print("⚠️ Could not find moved emails, trying with fresh Gmail instance...")
         gmail_verify2 = Gmail(enable_cache=False) if hasattr(Gmail, '__init__') else Gmail()
-        all_emails = gmail_verify2.get_emails(days=365, max_emails=1000)
+        all_emails = gmail_verify2.get_emails(days=90, max_emails=100)
         moved_emails = all_emails[all_emails['message_id'].isin(message_ids)]
     
     assert not moved_emails.empty, "Emails should be found after move"
@@ -67,13 +67,13 @@ def test_move_to_inbox_from_archive():
     print(f"✅ Restore to archive result: {restore_result}")
     
     gmail_verify3 = Gmail()
-    all_emails = gmail_verify3.get_emails(days=365, max_emails=1000)
+    all_emails = gmail_verify3.get_emails(days=90, max_emails=100)
     restored_emails = all_emails[all_emails['message_id'].isin(message_ids)]
     
     if restored_emails.empty:
         print("⚠️ Could not find restored emails, trying with fresh Gmail instance...")
         gmail_verify4 = Gmail(enable_cache=False) if hasattr(Gmail, '__init__') else Gmail()
-        all_emails = gmail_verify4.get_emails(days=365, max_emails=1000)
+        all_emails = gmail_verify4.get_emails(days=90, max_emails=100)
         restored_emails = all_emails[all_emails['message_id'].isin(message_ids)]
     
     assert not restored_emails.empty, "Emails should be found after restoration"
@@ -112,13 +112,13 @@ def test_move_to_inbox_from_trash():
     
     # Verify using label-based approach (avoid folder search due to eventual consistency)
     gmail_verify = Gmail()
-    all_emails = gmail_verify.get_emails(days=365, max_emails=1000)
+    all_emails = gmail_verify.get_emails(days=90, max_emails=100)
     moved_emails = all_emails[all_emails['message_id'].isin(message_ids)]
     
     if moved_emails.empty:
         print("⚠️ Could not find moved emails, trying with fresh Gmail instance...")
         gmail_verify2 = Gmail(enable_cache=False) if hasattr(Gmail, '__init__') else Gmail()
-        all_emails = gmail_verify2.get_emails(days=365, max_emails=1000)
+        all_emails = gmail_verify2.get_emails(days=90, max_emails=100)
         moved_emails = all_emails[all_emails['message_id'].isin(message_ids)]
     
     assert not moved_emails.empty, "Emails should be found after move"

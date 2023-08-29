@@ -35,13 +35,13 @@ def test_move_to_archive_from_inbox():
     message_ids = inbox_emails['message_id'].tolist()
     
     # Get the specific emails by ID to check their labels
-    all_emails = gmail_verify.get_emails(days=365, max_emails=1000)
+    all_emails = gmail_verify.get_emails(days=90, max_emails=100)
     moved_emails = all_emails[all_emails['message_id'].isin(message_ids)]
     
     if moved_emails.empty:
         print("⚠️ Could not find moved emails, trying with fresh Gmail instance...")
         gmail_verify2 = Gmail(enable_cache=False) if hasattr(Gmail, '__init__') else Gmail()
-        all_emails = gmail_verify2.get_emails(days=365, max_emails=1000)
+        all_emails = gmail_verify2.get_emails(days=90, max_emails=100)
         moved_emails = all_emails[all_emails['message_id'].isin(message_ids)]
     
     assert not moved_emails.empty, "Emails should be found after move"
@@ -64,7 +64,7 @@ def test_move_to_archive_from_inbox():
     # Step 4: Verify restoration (check labels directly)
     time.sleep(2)  # Allow cache to update
     gmail_verify3 = Gmail()
-    all_emails_after = gmail_verify3.get_emails(days=365, max_emails=1000)
+    all_emails_after = gmail_verify3.get_emails(days=90, max_emails=100)
     restored_emails = all_emails_after[all_emails_after['message_id'].isin(message_ids)]
     
     assert not restored_emails.empty, "Emails should be found after restoration"
@@ -104,7 +104,7 @@ def test_move_to_archive_from_trash():
     message_ids = trash_emails['message_id'].tolist()
     
     # Get the specific emails by ID to check their labels
-    all_emails = gmail_verify.get_emails(days=365, max_emails=1000)
+    all_emails = gmail_verify.get_emails(days=90, max_emails=100)
     moved_emails = all_emails[all_emails['message_id'].isin(message_ids)]
     
     assert not moved_emails.empty, "Emails should be found after move"
@@ -127,7 +127,7 @@ def test_move_to_archive_from_trash():
     # Step 4: Verify restoration (check labels directly)
     time.sleep(2)  # Allow cache to update
     gmail_verify3 = Gmail()
-    all_emails_after = gmail_verify3.get_emails(days=365, max_emails=1000)
+    all_emails_after = gmail_verify3.get_emails(days=90, max_emails=100)
     restored_emails = all_emails_after[all_emails_after['message_id'].isin(message_ids)]
     
     assert not restored_emails.empty, "Emails should be found after restoration"

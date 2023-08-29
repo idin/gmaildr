@@ -114,7 +114,7 @@ def test_gmail_authentication_flow():
                         if is_expected_error:
                             print("✅ Got expected authentication error - test isolation is working")
                             print("✅ Test PASSED: Auth flow properly triggered in isolated environment")
-                            return True  # Test passed successfully
+                            # Test passed successfully
                         else:
                             print(f"❌ Unexpected error type: {auth_error}")
                             print(f"Error type: {type(auth_error).__name__}")
