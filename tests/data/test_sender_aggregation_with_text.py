@@ -45,8 +45,8 @@ def test_aggregate_emails_by_sender_with_text():
     # Verify sender_email values are unique
     assert result['sender_email'].nunique() == len(result), "Each sender_email should appear only once"
     
-    # Verify we have the expected columns (SENDER_DATA_COLUMNS + SENDER_DATA_TEXT_COLUMNS)
-    expected_total_columns = len(SENDER_DATA_COLUMNS) + len(SENDER_DATA_TEXT_COLUMNS)
+    # Verify we have the expected columns (SENDER_DATA_COLUMNS + SENDER_DATA_TEXT_COLUMNS + sender_email)
+    expected_total_columns = len(SENDER_DATA_COLUMNS) + len(SENDER_DATA_TEXT_COLUMNS) + 1  # +1 for sender_email
     assert len(result.columns) == expected_total_columns, f"Expected {expected_total_columns} columns, got {len(result.columns)}"
     
     # Check for all expected columns

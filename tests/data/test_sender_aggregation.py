@@ -47,8 +47,9 @@ def test_aggregate_emails_by_sender():
     
     # Check for expected aggregated columns (based on our function)
     
-    # Verify we have exactly 51 columns (from SENDER_DATA_COLUMNS)
-    assert len(result.columns) == 51, f"Expected 51 columns, got {len(result.columns)}"
+    # Verify we have exactly the expected columns (SENDER_DATA_COLUMNS + sender_email)
+    expected_count = len(SENDER_DATA_COLUMNS) + 1  # +1 for sender_email
+    assert len(result.columns) == expected_count, f"Expected {expected_count} columns, got {len(result.columns)}"
 
     expected_columns = SENDER_DATA_COLUMNS
     

@@ -39,11 +39,11 @@ def test_sender_aggregation_columns_with_text():
         f"Result is missing some expected columns from SENDER_DATA_TEXT_COLUMNS"
     )
     
-    # Verify exact column count
-    expected_total_columns = len(SENDER_DATA_COLUMNS) + len(SENDER_DATA_TEXT_COLUMNS)
+    # Verify exact column count (SENDER_DATA_COLUMNS + SENDER_DATA_TEXT_COLUMNS + sender_email)
+    expected_total_columns = len(SENDER_DATA_COLUMNS) + len(SENDER_DATA_TEXT_COLUMNS) + 1  # +1 for sender_email
     assert len(result.columns) == expected_total_columns, (
         f"Expected exactly {expected_total_columns} columns "
-        f"({len(SENDER_DATA_COLUMNS)} base + {len(SENDER_DATA_TEXT_COLUMNS)} text), "
+        f"({len(SENDER_DATA_COLUMNS)} base + {len(SENDER_DATA_TEXT_COLUMNS)} text + sender_email), "
         f"got {len(result.columns)}"
     )
     
