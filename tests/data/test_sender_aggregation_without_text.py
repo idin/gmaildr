@@ -1,0 +1,54 @@
+"""
+Test sender aggregation functionality without text fields.
+"""
+
+import pandas as pd
+import pytest
+from gmaildr import Gmail
+from gmaildr.test_utils.get_emails import get_emails
+from gmaildr.data.sender_aggregation import aggregate_emails_by_sender, SENDER_DATA_COLUMNS
+
+
+def test_aggregate_emails_by_sender_without_text():
+    """
+    Test sender aggregation functionality using real Gmail data without text fields.
+    """
+    gmail = Gmail()
+    
+    # Get real emails from Gmail without text content
+    emails = get_emails(gmail, n=100, include_text=False, include_metrics=False)
+    
+    if len(emails) < 100:
+        pytest.skip(f"Need at least 100 emails for test, got {len(emails)}")
+    
+    # Test aggregation with real data (no text fields)
+    result = aggregate_emails_by_sender(emails)
+    
+    # Basic structure assertions
+    assert isinstance(result, pd.DataFrame), "Result should be a pandas DataFrame"
+    assert not result.empty, "Result should not be empty when input has emails"
+    assert 'sender_email' in result.columns, "Result should have sender_email column"
+    assert 'total_emails' in result.columns, "Result should have total_emails column"
+    
+    # Verify aggregation logic
+    unique_senders = emails['sender_email'].nunique()
+    assert len(result) == unique_senders, f"Should have {unique_senders} rows, one per unique sender"
+    
+    # Verify total email counts match
+    total_emails_input = len(emails)
+    total_emails_output = result['total_emails'].sum()
+    assert total_emails_input == total_emails_output, "Total email count should be preserved"
+    
+    # Check that each sender has at least 1 email
+    assert result['total_emails'].min() >= 1, "Each sender should have at least 1 email"
+    
+    # Verify sender_email values are unique
+    assert result['sender_email'].nunique() == len(result), "Each sender_email should appear only once"
+    
+    # Verify we have exactly the expected columns (from SENDER_DATA_COLUMNS)
+    assert len(result.columns) == len(SENDER_DATA_COLUMNS), f"Expected {len(SENDER_DATA_COLUMNS)} columns, got {len(result.columns)}"
+    
+    for col in SENDER_DATA_COLUMNS:
+        assert col in result.columns, f"Expected column '{col}' not found in result"
+    
+    print(f"✅ Sender aggregation test (without text) passed! Processed {len(emails)} emails from {len(result)} unique senders")
